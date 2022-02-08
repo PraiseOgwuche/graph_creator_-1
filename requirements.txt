@@ -1,3 +1,6 @@
 streamlit
 plotly>=4.0.0
 watchdog
+numpy
+chart_studio
+pandas
