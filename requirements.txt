@@ -1,6 +1,6 @@
 streamlit==1.5.0
 plotly==5.5.0
 watchdog
-numpy==1.22.2
+numpy
 chart_studio
 pandas
