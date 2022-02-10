@@ -4,3 +4,4 @@ watchdog
 numpy
 chart_studio
 pandas
+kaleido

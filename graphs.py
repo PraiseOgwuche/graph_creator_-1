@@ -8,9 +8,10 @@ import numpy as np
 import chart_studio.plotly as py
 from math import isclose, sqrt
 
+order = []
+
 
 class DataAnalyzer:
-
     large_rockwell_template = dict(
         layout=go.Layout(title_font=dict(family="Hevletica", size=24))
     )
@@ -54,38 +55,44 @@ class DataAnalyzer:
         return rounded
 
     def create_bar_graph(self, column: str, title: Optional[bool] = False,
-                         order: Optional[List[str]] = None,
-                         x: Optional[str] = None, y: Optional[str] = None,
-                         one_color: bool = False):
+                         order: Optional[str] = None,
+                         x_title: Optional[str] = None, y_title: Optional[str] = None,
+                         one_color: bool = True, width: int = 900, height: int = 550,
+                         font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2):
+
         df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(
             normalize=True))
         df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
+        order = order.split(',')
         if order:
             not_in_df = [index for index in order if index not in set(list(
                 df_temp.index))]
             for i in not_in_df:
                 df_temp.loc[i, :] = [np.nan] * len(df_temp.columns)
-            df_temp = df_temp.loc[order, ]
+            df_temp = df_temp.loc[order,]
         df_temp = df_temp.fillna(0).reset_index()
-        return self.plot_bar(df_temp['index'], df_temp[column],
-                      title=self.df.loc[0, column] if title else None,
-                      x_title=x, y_title=y, one_color=one_color)
+        x = df_temp['index']
+        for ind, val in enumerate(x):
+            x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * w + ')\s', r'\1<br> ', val))
+        return self.plot_bar(x, df_temp[column], width, height, font_size, font,
+                             title=self.df.loc[0, column] if title else None,
+                             x_title=x_title, y_title=y_title, one_color=one_color)
 
     def create_bar_graph_group(self, columns: List[str], title: Optional[bool] = False,
-                               order: List[str] = None,
-                               x_title: Optional[str] = None, y_title: Optional[str] = None,
-                               one_color: bool = False, w: int = 1, names: Optional[List[str]] = None,
-                               color_palette: int = 1):
+                               order: str = None,
+                               x_title: Optional[str] = None, y_title: Optional[str] = None, w: int = 1,
+                               names: Optional[List[str]] = None,
+                               width: int = 900, height: int = 550,
+                               font_size: int = 20, font: str = 'Hevletica Neue'):
         list_vals = [self.df.loc[0, column] for column in columns]
         for ind, val in enumerate(list_vals):
-            if len(val) >= 18:
-                list_vals[ind] = list_vals[ind].replace(val,
-                                                        re.sub('(' + '\s\S*?' * w + ')\s',
+            list_vals[ind] = list_vals[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
                                                                r'\1<br> ',
                                                                val))
         fig = go.Figure()
-        palette = self.color_palette if color_palette == 1 else self.color_palette2
+        palette = self.color_palette
         dict_nums = {}
+        order = order.split(',')
         for index, response in enumerate(order):
             list_num = []
             for column in columns:
@@ -105,45 +112,46 @@ class DataAnalyzer:
                 dict_nums[key][1][val] = percentages[ind]
         for index, response in enumerate(order):
             fig.add_trace(go.Bar(x=list_vals,
-                                 y=[round(i, 1) for i in dict_nums[response][1]],
+                                 y=dict_nums[response][1],
                                  name=names[index] if names else response,
                                  marker_color=palette[dict_nums[response][0]],
                                  texttemplate='%{y}', textposition='outside',
-                                 textfont_size=40
+                                 textfont_size=font_size
                                  ))
         fig.update_layout(
-            font_family='Arial',
+            font_family=font,
             title=title if title else '',
-            xaxis_tickfont_size=40,
+            xaxis_tickfont_size=font_size,
             xaxis=dict(
                 title=x_title if x_title else '',
-                titlefont_size=40,
-                tickfont_size=40
+                titlefont_size=font_size,
+                tickfont_size=font_size
 
             ),
             yaxis=dict(
                 title=y_title if y_title else '',
-                titlefont_size=40,
-                tickfont_size=40,
+                titlefont_size=font_size,
+                tickfont_size=font_size,
                 tickformat="1%"
             ),
             bargap=0.15,
             template=self.large_rockwell_template,
-            legend=dict(font_size=40, font_family='Arial'),
+            legend=dict(font_size=font_size, font_family=font),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
+            width=width, height=height
         )
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
-        fig.write_image("fig.png", height=1300, width=3000, scale=8)
         return fig
 
     def create_chart_for_categories(self, column: str, title: Optional[bool] = False,
                                     order: Optional[List[str]] = None,
                                     x: Optional[str] = None, y: Optional[str] = None,
-                                    one_color: bool = False, sep: str = ',', w = 1):
+                                    one_color: bool = False, sep: str = ',', w=1,
+                                    width: int = 900, height: int = 550):
         temp_df = self.df.copy()
         temp_df.loc[1:, column] = [re.split(sep, str(i)) for i in temp_df.loc[1:, column]]
         df_res = pd.DataFrame(columns=['count'])
@@ -151,7 +159,8 @@ class DataAnalyzer:
             for index_tag, tag in enumerate(tag_list):
                 if len(tag) == 1:
                     temp_df.loc[index_row + 1, column][index_tag + 1] = tag + \
-                                                                        temp_df.loc[index_row + 1, column][index_tag + 1]
+                                                                        temp_df.loc[index_row + 1, column][
+                                                                            index_tag + 1]
                     continue
                 tag = tag.strip()
                 if tag[-1] == '.':
@@ -192,7 +201,7 @@ class DataAnalyzer:
         for index, response in enumerate(['Pre-semester',
                                           'Post-semester']):
             fig.add_trace(go.Bar(x=x,
-                                 y=[round(i, 1) for i in df.loc[response, :]],
+                                 y=np.array(self.round_to_100(np.array(df.loc[response, :] * 100))) / 100,
                                  name=response,
                                  marker_color=palette[-index],
                                  texttemplate='%{y}', textposition='outside'
@@ -210,7 +219,7 @@ class DataAnalyzer:
                 title='',
                 titlefont_size=20,
                 tickfont_size=12,
-                tickformat = '~%'
+                tickformat='1%'
             ),
             bargap=0.3,
             template=self.large_rockwell_template
@@ -221,7 +230,7 @@ class DataAnalyzer:
             y=-0.5,
             xanchor="center",
             x=0.48,
-            font = dict(size = 16, color = "black")
+            font=dict(size=16, color="black")
         ))
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
@@ -231,17 +240,19 @@ class DataAnalyzer:
 
         fig.write_image("fig.png", height=550, width=900, scale=10)
 
-    def plot_bar(self, x: pd.Series, y: pd.Series, title: Optional[str] = None,
+    def plot_bar(self, x: pd.Series, y: pd.Series, width: int, height: int, font_size: int,
+                 font: str, title: Optional[str] = None,
                  x_title: Optional[str] = None,
                  y_title: Optional[str] = None,
-                 one_color: bool = False, grouped_bar: bool = False):
+                 one_color: bool = False):
         fig = go.Figure()
         x = self.capitalize_list(x)
         if one_color:
             fig.add_trace(go.Bar(x=[str(xs) + '‏‏‎ ‎' for xs in x],
-                                 y=[round(i, 1) for i in y],
+                                 y=y,
                                  marker_color='rgb(224,44,36)',
                                  texttemplate='%{y}', textposition='outside',
+                                 textfont_size=font_size
                                  ))
         else:
             fig.add_trace(go.Bar(x=x,
@@ -251,28 +262,28 @@ class DataAnalyzer:
                                  ))
 
         fig.update_layout(
-            font_family='Hevletica Neue',
-            xaxis_tickfont_size=14,
+            title=title,
+            font_family=font,
             xaxis=dict(
                 title=x_title if x_title else '',
-                titlefont_size=16,
-                tickfont_size=12,
+                titlefont_size=font_size,
+                tickfont_size=font_size,
             ),
             yaxis=dict(
                 title=y_title if y_title else '',
-                titlefont_size=16,
-                tickfont_size=12,
-                tickformat = '1%'
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat='1%'
             ),
-            bargap=0.15, # gap between bars of adjacent location coordinates.
+            bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template
         )
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
-        #fig.write_image("fig.png", height=550, width=900, scale=10)
-        fig.update_layout(width=900, height=550, plot_bgcolor='rgba(0,0,0,0)')
+        # fig.write_image("fig.png", height=550, width=900, scale=10)
+        fig.update_layout(width=width, height=height, plot_bgcolor='rgba(0,0,0,0)')
         return fig
 
     def create_pie_chart(self, column: str):
@@ -286,11 +297,11 @@ class DataAnalyzer:
         detractors = (self.df.loc[1:, column] == 'Detractor').sum() / (len(self.df) - 1)
         fig = go.Figure(go.Indicator(
             font_family='Hevletica Neue',
-            mode = "gauge+number",
-            value = round(100 * (promoters - detractors), 1),
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            gauge = {'axis': {'range': [-100, 100]},
-                     'bar': {'color': 'rgb(224,44,36)', 'thickness': 1}},))
+            mode="gauge+number",
+            value=round(100 * (promoters - detractors), 1),
+            domain={'x': [0, 1], 'y': [0, 1]},
+            gauge={'axis': {'range': [-100, 100]},
+                   'bar': {'color': 'rgb(224,44,36)', 'thickness': 1}}, ))
 
         fig.show()
 
@@ -303,12 +314,12 @@ class DataAnalyzer:
                 df_temp.index))]
             for i in not_in_df:
                 df_temp.loc[i, :] = [np.nan] * len(df_temp.columns)
-            df_temp = df_temp.loc[order, ]
+            df_temp = df_temp.loc[order,]
         df_temp = df_temp.fillna(0).reset_index()
         df_temp = df_temp.sort_values(by='index', ascending=True)
         fig = go.Figure()
         annotations = []
-        for row, color in zip(range(len(df_temp)), ['rgb(60,54,50)', 'rgb(222,46,37)','rgb(132,29,22)']):
+        for row, color in zip(range(len(df_temp)), ['rgb(60,54,50)', 'rgb(222,46,37)', 'rgb(132,29,22)']):
             fig.add_trace(go.Bar(
                 y=[''],
                 x=[df_temp.loc[row, column]],
@@ -321,7 +332,9 @@ class DataAnalyzer:
         if df_temp.loc[0, column] > 5:
             annotations.append(dict(xref='x', yref='y',
                                     x=df_temp.loc[0, column] / 2, y=0,
-                                    text=' ' + str(df_temp.loc[0, column]) + '%' + '<br> <span style="font-size: 25px;">' + df_temp.loc[0, 'index'] + '</span>',
+                                    text=' ' + str(
+                                        df_temp.loc[0, column]) + '%' + '<br> <span style="font-size: 25px;">' +
+                                         df_temp.loc[0, 'index'] + '</span>',
                                     font=dict(family='Hevletica Neue', size=40,
                                               color='rgb(255, 255, 255)'),
                                     showarrow=False))
@@ -331,7 +344,9 @@ class DataAnalyzer:
             if df_temp.loc[i, column] > 5:
                 annotations.append(dict(xref='x', yref='y',
                                         x=space + (df_temp.loc[i, column] / 2), y=0,
-                                        text=' ' + str(df_temp.loc[i, column]) + '%' + '<br> <span style="font-size: 25px;">' + df_temp.loc[i, 'index'] + '</span>',
+                                        text=' ' + str(
+                                            df_temp.loc[i, column]) + '%' + '<br> <span style="font-size: 25px;">' +
+                                             df_temp.loc[i, 'index'] + '</span>',
                                         font=dict(family='Hevletica Neue', size=40,
                                                   color='rgb(255, 255, 255)'),
                                         showarrow=False, align="center"))
@@ -352,7 +367,7 @@ class DataAnalyzer:
             barmode='stack',
             plot_bgcolor='rgb(255, 255, 255)',
             showlegend=True,
-            annotations = annotations
+            annotations=annotations
         )
         fig.update_layout(font_family='Hevletica Neue',
                           legend=dict(
@@ -361,7 +376,7 @@ class DataAnalyzer:
                               y=-0.02,
                               xanchor="center",
                               x=0.48,
-                              font = dict(size = 20, color = "black")
+                              font=dict(size=20, color="black")
                           ))
         fig.show()
 
@@ -381,7 +396,7 @@ class DataAnalyzer:
             error_y=dict(type='data', color=self.color_palette[-3], array=np.array(self.df['Average Score']) * 0.1),
             marker_color=self.color_palette[-1],
             texttemplate='%{y}', textposition='inside',
-            insidetextanchor = 'middle'
+            insidetextanchor='middle'
         ))
         fig.update_layout(
             font_family='Hevletica Neue',
@@ -397,14 +412,14 @@ class DataAnalyzer:
                 titlefont_size=16,
                 tickfont_size=12
             ),
-            bargap=0.25, # gap between bars of adjacent location coordinates.
+            bargap=0.25,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template
         )
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
-        #fig.write_image("fig.png", height=550, width=900, scale=10)
+        # fig.write_image("fig.png", height=550, width=900, scale=10)
         fig.show()
 
     def stacked_bar_plot(self, course_var, first_var, second_var, y_title, perc, title, include_total):
@@ -448,15 +463,15 @@ class DataAnalyzer:
                 titlefont_size=16,
                 tickfont_size=16
             ),
-            bargap=0.25, # gap between bars of adjacent location coordinates.
+            bargap=0.25,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
-            legend = dict(font = dict(family = "Hevletica Neue", size = 16)))
+            legend=dict(font=dict(family="Hevletica Neue", size=16)))
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
         fig.update_layout(barmode='stack')
-        #fig.write_image("fig.png", height=550, width=900, scale=10)
+        # fig.write_image("fig.png", height=550, width=900, scale=10)
         fig.show()
 
     def create_simple_bar(self, course_col, col, perc, y_title, title, avg_line_title, inside_outside_pos):
@@ -482,8 +497,8 @@ class DataAnalyzer:
                            yshift=10)
         fig.update_layout(
             font_family='Hevletica Neue',
-            font_size = 16,
-            title = title if title else '',
+            font_size=16,
+            title=title if title else '',
             xaxis_tickfont_size=16,
             xaxis=dict(
                 title='',
@@ -495,15 +510,15 @@ class DataAnalyzer:
                 titlefont_size=16,
                 tickfont_size=16
             ),
-            bargap=0.25, # gap between bars of adjacent location coordinates.
+            bargap=0.25,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
-            legend = dict(font = dict(family = "Hevletica Neue", size = 16)
-                          ))
+            legend=dict(font=dict(family="Hevletica Neue", size=16)
+                        ))
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
-        #fig.write_image("fig.png", height=550, width=900, scale=10)
+        # fig.write_image("fig.png", height=550, width=900, scale=10)
         fig.show()
 
     def plot_line(self, time_col, list_of_cols, title, y_title, x_title):
@@ -515,8 +530,8 @@ class DataAnalyzer:
                                      line=dict(color=self.color_palette2[ind + 1], width=4)))
         fig.update_layout(
             font_family='Arial',
-            font_size = 16,
-            title = title if title else '',
+            font_size=16,
+            title=title if title else '',
             xaxis_tickfont_size=16,
             xaxis=dict(
                 title=x_title,
@@ -530,8 +545,8 @@ class DataAnalyzer:
                 tickfont_size=16
             ),
             template=self.large_rockwell_template,
-            legend = dict(font = dict(family = "Arial", size = 16)),
-            #margin=dict(l=0, r=0, b=10, pad=100)
+            legend=dict(font=dict(family="Arial", size=16)),
+            # margin=dict(l=0, r=0, b=10, pad=100)
         )
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
@@ -541,6 +556,3 @@ class DataAnalyzer:
                           plot_bgcolor='rgba(0,0,0,0)')
         fig.write_image("fig.png", height=550, width=900, scale=10)
         fig.show()
-
-
-
