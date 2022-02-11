@@ -71,7 +71,7 @@ if uploaded_file is not None:
             else:
                 order = st.text_input('Select the order for the options:',
                                       value=session_state.options)
-            gp = graph_params(900, 550)
+            gp = graph_params(900, 600)
         submitted = st.sidebar.button('Plot Graph')
         if submitted:
             st.header('Resulting Graph')

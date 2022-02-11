@@ -72,7 +72,7 @@ class DataAnalyzer:
         df_temp = df_temp.fillna(0).reset_index()
         x = df_temp['index']
         for ind, val in enumerate(x):
-            x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * w + ')\s', r'\1<br> ', val))
+            x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s', r'\1<br> ', val))
         return self.plot_bar(x, df_temp[column], width, height, font_size, font,
                              title=self.df.loc[0, column] if title else None,
                              x_title=x_title, y_title=y_title, one_color=one_color)
