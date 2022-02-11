@@ -60,8 +60,7 @@ class DataAnalyzer:
                          one_color: bool = True, width: int = 900, height: int = 550,
                          font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2):
 
-        df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(
-            normalize=True))
+        df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
         df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
         order = order.split(',')
         if order:
@@ -276,14 +275,16 @@ class DataAnalyzer:
                 tickformat='1%'
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
-            template=self.large_rockwell_template
+            template=self.large_rockwell_template,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            width=width,
+            height=height
         )
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
-        # fig.write_image("fig.png", height=550, width=900, scale=10)
-        fig.update_layout(width=width, height=height, plot_bgcolor='rgba(0,0,0,0)')
         return fig
 
     def create_pie_chart(self, column: str):
