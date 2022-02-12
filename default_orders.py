@@ -56,6 +56,8 @@ known_orders = (
      'Account & login issues (e.g., I could not login to Forum)',
      'Audio/video issues (e.g., others could not hear or see me, I could not hear or see others)',
      'Other (please describe the problem)'),
+    ('Not very well at all', 'Not well', 'Well', 'Moderately well', 'Extremely well'),
+    ('Not well at all', 'Slightly well', 'Moderately well', 'Well', 'Extremely well')
 )
 
 

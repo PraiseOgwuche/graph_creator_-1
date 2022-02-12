@@ -84,7 +84,7 @@ if uploaded_file is not None:
         with st.sidebar:
             save = st.checkbox('Save the order')
             if not save:
-                unique_vals = list(dataframe[column].unique())[1:]
+                unique_vals = [x for x in list(dataframe[column].unique())[1:] if str(x) != 'nan']
                 ord = check_if_order_is_known(unique_vals)
                 if ord is None:
                     ord = sorted(unique_vals)

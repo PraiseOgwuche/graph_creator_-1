@@ -125,7 +125,7 @@ class DataAnalyzer:
         if len(legend_position) == 2:
             y_legend = 1 if legend_position[1] == 'top' else 0.5 if legend_position[1] == 'middle' else -0.3
             x_legend = 1 if legend_position[0] == 'right' else 0.5 if legend_position[0] == 'center' else -0.15
-            orientation = 'h' if x_legend == 'center' else 'v'
+            orientation = 'h' if legend_position[0] == 'center' else 'v'
             x_anchor = 'left'
             y_anchor = 'top'
 
