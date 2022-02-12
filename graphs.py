@@ -7,6 +7,7 @@ import re
 import numpy as np
 import chart_studio.plotly as py
 from math import isclose, sqrt
+
 pd.options.mode.chained_assignment = None
 
 order = []
@@ -55,7 +56,7 @@ class DataAnalyzer:
             rounded[rank[i][1]] += 1
         return rounded
 
-    def create_bar_graph(self, column: str, title: Optional[bool] = False,
+    def create_bar_graph(self, column: str, title: Optional[bool] = False, title_text: Optional[str] = None,
                          order: Optional[str] = None,
                          x_title: Optional[str] = None, y_title: Optional[str] = None,
                          one_color: bool = True, width: int = 900, height: int = 550,
@@ -63,7 +64,7 @@ class DataAnalyzer:
 
         df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
         df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
-        order = order.split(', \n')
+        order = order.split(',\n')
         if order:
             not_in_df = [index for index in order if index not in set(list(
                 df_temp.index))]
@@ -75,11 +76,11 @@ class DataAnalyzer:
         for ind, val in enumerate(x):
             x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s', r'\1<br> ', val))
         return self.plot_bar(x, df_temp[column], width, height, font_size, font,
-                             title=self.df.loc[0, column] if title else None,
+                             title=title_text if title else None,
                              x_title=x_title, y_title=y_title, one_color=one_color)
 
     def create_bar_graph_group(self, columns: List[str], title: Optional[bool] = False,
-                               order: str = None,
+                               title_text: Optional[str] = None, order: str = None,
                                x_title: Optional[str] = None, y_title: Optional[str] = None, w: int = 1,
                                names: Optional[List[str]] = None,
                                width: int = 900, height: int = 550,
@@ -88,10 +89,10 @@ class DataAnalyzer:
         list_vals = [self.df.loc[0, column] for column in columns]
         for ind, val in enumerate(list_vals):
             list_vals[ind] = list_vals[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                               r'\1<br> ',
-                                                               val))
+                                                                r'\1<br> ',
+                                                                val))
         fig = go.Figure()
-        order = order.split(', \n')
+        order = order.split(',\n')
         if len(order) <= 5:
             palette = self.color_palette2
         else:
@@ -137,7 +138,8 @@ class DataAnalyzer:
             y_anchor = legend_position[3]
         fig.update_layout(
             font_family=font,
-            title=title if title else '',
+            font_size=font_size,
+            title=title_text if title else '',
             xaxis_tickfont_size=font_size,
             xaxis=dict(
                 title=x_title if x_title else '',
@@ -170,7 +172,8 @@ class DataAnalyzer:
         fig.update_xaxes(tickangle=0, automargin=True)
         return fig
 
-    def get_categories_from_columns(self, column, sep):
+    def get_categories_from_columns(self, column: str, sep: str,
+                                    order: Optional[List[str]] = None) -> pd.DataFrame:
         temp_df = self.df.copy()
         temp_df.loc[1:, column] = [re.split(sep, str(i)) for i in temp_df.loc[1:, column]]
         df_res = pd.DataFrame(columns=['count'])
@@ -188,9 +191,10 @@ class DataAnalyzer:
                     df_res.loc[tag, 'count'] += 1
                 else:
                     df_res.loc[tag, 'count'] = 1
-        for string in order:
-            if not string in df_res.index:
-                df_res.loc[string, 'count'] = 0
+        if order:
+            for string in order:
+                if not string in df_res.index:
+                    df_res.loc[string, 'count'] = 0
         df_res = df_res.reset_index()
         df_res = df_res[df_res['index'] != 'nan']
         df_res['count'] = [i / sum(df_res['count']) for i in df_res['count']]
@@ -198,20 +202,23 @@ class DataAnalyzer:
         return df_res
 
     def create_chart_for_categories(self, column: str, title: Optional[bool] = False,
-                                    order: Optional[List[str]] = None,
-                                    x: Optional[str] = None, y: Optional[str] = None,
+                                    title_text: Optional[str] = None, order: Optional[str] = None,
+                                    x_title: Optional[str] = None, y_title: Optional[str] = None,
                                     one_color: bool = False, sep: str = ',(\S)', w=1,
-                                    width: int = 900, height: int = 550):
-        df_res = self.get_categories_from_columns(column, sep)
+                                    width: int = 900, height: int = 550,
+                                    font_size: int = 20, font: str = 'Hevletica Neue'):
+        order = order.split(',\n')
+        df_res = self.get_categories_from_columns(column, sep, order)
         for tag in df_res['index']:
             if len(tag) >= 18:
                 df_res['index'] = df_res['index'].replace(tag,
-                                                          re.sub('(' + '\s\S*?' * w + ')\s',
+                                                          re.sub('(' + '\s\S*?' * int(w) + ')\s',
                                                                  r'\1<br> ',
                                                                  tag))
-        self.plot_bar(df_res['index'], df_res['count'],
-                      title=column if title else None,
-                      x_title=x, y_title=y, one_color=one_color)
+
+        return self.plot_bar(df_res['index'], df_res['count'], width, height, font_size, font,
+                             title=title_text if title else None,
+                             x_title=x_title, y_title=y_title, one_color=one_color)
 
     def plot_self_assessment(self, w=2):
         fig = go.Figure()
@@ -291,6 +298,7 @@ class DataAnalyzer:
         fig.update_layout(
             title=title,
             font_family=font,
+            font_size=font_size,
             xaxis=dict(
                 title=x_title if x_title else '',
                 titlefont_size=font_size,
@@ -315,11 +323,63 @@ class DataAnalyzer:
         fig.update_xaxes(tickangle=0, automargin=True)
         return fig
 
-    def create_pie_chart(self, column: str):
+    def create_pie_chart(self, column: str, width: int, height: int, font_size: int,
+                         font: str, title: Optional[str] = None, title_text: Optional[str] = None,
+                         x_title: Optional[str] = None,
+                         y_title: Optional[str] = None,
+                         what_show: Optional[str] = None, legend_position: List[str] = ('top', 'left')):
         dictionary = dict(self.df.loc[1:, column].dropna().value_counts())
+        text_info = 'percent' if what_show == 'Percent' else 'percent+label'
         fig = go.Figure(data=[go.Pie(labels=list(dictionary.keys()), values=list(dictionary.values()),
-                                     marker_colors=['rgb(132,29,22)', 'rgb(243,210,143)'])])
-        fig.show()
+                                     marker_colors=['rgb(132,29,22)', 'rgb(222,46,37)', 'rgb(153,153,153)'],
+                                     textinfo=text_info)])
+
+        if len(legend_position) == 2:
+            y_legend = 1 if legend_position[1] == 'top' else 0.5 if legend_position[1] == 'middle' else -0.3
+            x_legend = 1 if legend_position[0] == 'right' else 0.5 if legend_position[0] == 'center' else -0.15
+            orientation = 'h' if legend_position[0] == 'center' else 'v'
+            x_anchor = 'left'
+            y_anchor = 'top'
+        else:
+            y_legend = legend_position[1]
+            x_legend = legend_position[0]
+            orientation = 'v' if legend_position[4] == 'vertical' else 'h'
+            x_anchor = legend_position[2]
+            y_anchor = legend_position[3]
+        fig.update_layout(
+            title=title_text if title else '',
+            font_family=font,
+            font_size=font_size,
+            xaxis=dict(
+                title=x_title if x_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+            ),
+            yaxis=dict(
+                title=y_title if y_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat='1%'
+            ),
+            bargap=0.15,  # gap between bars of adjacent location coordinates.
+            template=self.large_rockwell_template,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            width=width,
+            height=height,
+            legend=dict(font_size=font_size,
+                        font_family=font,
+                        orientation=orientation,
+                        y=y_legend,
+                        x=x_legend,
+                        xanchor=x_anchor,
+                        yanchor=y_anchor),
+        )
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
+        fig.update_xaxes(tickangle=0, automargin=True)
+        return fig
 
     def create_gauge_graph(self, column: str):
         promoters = (self.df.loc[1:, column] == 'Promoter').sum() / (len(self.df) - 1)
