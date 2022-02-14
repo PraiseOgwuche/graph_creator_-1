@@ -8,7 +8,7 @@ from default_orders import check_if_order_is_known
 
 class GraphParams:
     def __init__(self, width, height, font_size, font, x_title, y_title, title, title_text, num_of_words_per_line,
-                 legend_position):
+                 legend_position, transparent):
         self.width = width
         self.height = height
         self.font_size = font_size
@@ -19,6 +19,7 @@ class GraphParams:
         self.title_text = title_text
         self.num_of_words_per_line = num_of_words_per_line
         self.legend_position = legend_position
+        self.transparent = transparent
 
 
 def graph_params(width, height, text_size, add_legend_pos, title, w):
@@ -27,6 +28,7 @@ def graph_params(width, height, text_size, add_legend_pos, title, w):
         height = st.number_input('Height', min_value=300, max_value=1500, value=height)
         font_size = st.number_input('Font Size', min_value=10, max_value=60, value=text_size)
         font = st.selectbox('Font', ['Hevletica', 'Hevletica Neue', 'Arial'], index=1)
+        transparent = st.checkbox('Transparent Background Graph')
         x_title = st.text_input('X-axis title:')
         y_title = st.text_input('Y-axis title:')
         title_box = st.checkbox('Add title')
@@ -54,7 +56,7 @@ def graph_params(width, height, text_size, add_legend_pos, title, w):
         else:
             legend_position = None
     return GraphParams(width, height, font_size, font, x_title, y_title, title_box, title_text, num_of_words_per_line,
-                       legend_position)
+                       legend_position, transparent)
 
 
 st.title("Graph Creator")
@@ -110,13 +112,14 @@ if uploaded_file is not None:
                                                             order=order, one_color=True,
                                                             x_title=gp.x_title, y_title=gp.y_title,
                                                             title=gp.title, title_text=gp.title_text,
-                                                            w=gp.num_of_words_per_line - 1)
+                                                            w=gp.num_of_words_per_line - 1, transparent=gp.transparent)
             graph_for_download = graph_creator.create_bar_graph(column, width=gp.width * 2, height=gp.height * 2,
                                                                 font_size=gp.font_size * 2, font='Arial',
                                                                 order=order, one_color=True,
                                                                 x_title=gp.x_title, y_title=gp.y_title,
                                                                 title=gp.title, title_text=gp.title_text,
-                                                                w=gp.num_of_words_per_line - 1)
+                                                                w=gp.num_of_words_per_line - 1,
+                                                                transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
             scale = 6 if gp.width * 2 > 3000 else 8
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
@@ -147,14 +150,16 @@ if uploaded_file is not None:
                                                                   order=order, x_title=gp.x_title, y_title=gp.y_title,
                                                                   title=gp.title, title_text=gp.title_text,
                                                                   w=gp.num_of_words_per_line - 1,
-                                                                  legend_position=gp.legend_position)
+                                                                  legend_position=gp.legend_position,
+                                                                  transparent=gp.transparent)
             graph_for_download = graph_creator.create_bar_graph_group(columns, width=gp.width * 2, height=gp.height * 2,
                                                                       font_size=gp.font_size * 2, font='Arial',
                                                                       order=order, x_title=gp.x_title,
                                                                       y_title=gp.y_title,
                                                                       title=gp.title, title_text=gp.title_text,
                                                                       w=gp.num_of_words_per_line - 1,
-                                                                      legend_position=gp.legend_position)
+                                                                      legend_position=gp.legend_position,
+                                                                      transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
             scale = 6 if gp.width * 2 > 3000 else 8
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
@@ -182,14 +187,16 @@ if uploaded_file is not None:
                                                                        order=order, one_color=True,
                                                                        x_title=gp.x_title, y_title=gp.y_title,
                                                                        title=gp.title, title_text=gp.title_text,
-                                                                       w=gp.num_of_words_per_line - 1)
+                                                                       w=gp.num_of_words_per_line - 1,
+                                                                       transparent=gp.transparent)
             graph_for_download = graph_creator.create_chart_for_categories(column, width=gp.width * 2,
                                                                            height=gp.height * 2,
                                                                            font_size=gp.font_size * 2, font='Arial',
                                                                            order=order, one_color=True,
                                                                            x_title=gp.x_title, y_title=gp.y_title,
                                                                            title=gp.title, title_text=gp.title_text,
-                                                                           w=gp.num_of_words_per_line - 1)
+                                                                           w=gp.num_of_words_per_line - 1,
+                                                                           transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
             scale = 6 if gp.width * 2 > 3000 else 8
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
@@ -217,12 +224,58 @@ if uploaded_file is not None:
                                                             font_size=gp.font_size, font=gp.font,
                                                             x_title=gp.x_title, y_title=gp.y_title,
                                                             title=gp.title, title_text=gp.title_text,
-                                                            what_show=what_show, legend_position=gp.legend_position)
+                                                            what_show=what_show, legend_position=gp.legend_position,
+                                                            transparent=gp.transparent)
             graph_for_download = graph_creator.create_pie_chart(column, width=gp.width * 2, height=gp.height * 2,
                                                                 font_size=gp.font_size * 2, font='Arial',
                                                                 x_title=gp.x_title, y_title=gp.y_title,
                                                                 title=gp.title, title_text=gp.title_text,
-                                                                what_show=what_show, legend_position=gp.legend_position)
+                                                                what_show=what_show, legend_position=gp.legend_position,
+                                                                transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
             scale = 6 if gp.width * 2 > 3000 else 8
+            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+
+
+    elif option == 'Gauge Graph':
+        column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
+        with st.sidebar:
+            with st.expander("Graph Parameters"):
+                width = st.number_input('Width', min_value=500, max_value=2500, value=700)
+                height = st.number_input('Height', min_value=300, max_value=1500, value=500)
+                font_size = st.number_input('Font Size', min_value=10, max_value=60, value=20)
+                font = st.selectbox('Font', ['Hevletica', 'Hevletica Neue', 'Arial'], index=1)
+                transparent = st.checkbox('Transparent Background Graph')
+
+        if column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.create_gauge_graph(column, width=width, height=height,
+                                                              font_size=font_size, font=font, transparent=transparent)
+            graph_for_download = graph_creator.create_gauge_graph(column, width=width, height=height,
+                                                                  font_size=font_size, font=font,
+                                                                  transparent=transparent)
+            st.plotly_chart(graph_for_plot)
+            scale = 6 if width * 2 > 3000 else 8
+            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+
+    elif option == 'Horizontal Bar Graph':
+        column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
+        with st.sidebar:
+            with st.expander("Graph Parameters"):
+                width = st.number_input('Width', min_value=500, max_value=2500, value=900)
+                height = st.number_input('Height', min_value=300, max_value=1500, value=500)
+                font_size = st.number_input('Font Size', min_value=10, max_value=80, value=40)
+                font = st.selectbox('Font', ['Hevletica', 'Hevletica Neue', 'Arial'], index=1)
+                transparent = st.checkbox('Transparent Background Graph')
+
+        if column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.create_horizontal_bar_graph(column, width=width, height=height,
+                                                                       font_size=font_size, font=font,
+                                                                       transparent=transparent)
+            graph_for_download = graph_creator.create_horizontal_bar_graph(column, width=width, height=height,
+                                                                           font_size=font_size, font=font,
+                                                                           transparent=transparent)
+            st.plotly_chart(graph_for_plot)
+            scale = 6 if width * 2 > 3000 else 8
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')

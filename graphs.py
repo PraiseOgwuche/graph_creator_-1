@@ -60,7 +60,8 @@ class DataAnalyzer:
                          order: Optional[str] = None,
                          x_title: Optional[str] = None, y_title: Optional[str] = None,
                          one_color: bool = True, width: int = 900, height: int = 550,
-                         font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2):
+                         font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
+                         transparent: bool = False):
 
         df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
         df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
@@ -77,7 +78,8 @@ class DataAnalyzer:
             x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s', r'\1<br> ', val))
         return self.plot_bar(x, df_temp[column], width, height, font_size, font,
                              title=title_text if title else None,
-                             x_title=x_title, y_title=y_title, one_color=one_color)
+                             x_title=x_title, y_title=y_title, one_color=one_color,
+                             transparent=transparent)
 
     def create_bar_graph_group(self, columns: List[str], title: Optional[bool] = False,
                                title_text: Optional[str] = None, order: str = None,
@@ -85,7 +87,8 @@ class DataAnalyzer:
                                names: Optional[List[str]] = None,
                                width: int = 900, height: int = 550,
                                font_size: int = 20, font: str = 'Hevletica Neue',
-                               legend_position: List[str] = ('top', 'left')):
+                               legend_position: List[str] = ('top', 'left'),
+                               transparent: bool = False):
         list_vals = [self.df.loc[0, column] for column in columns]
         for ind, val in enumerate(list_vals):
             list_vals[ind] = list_vals[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
@@ -140,6 +143,7 @@ class DataAnalyzer:
             font_family=font,
             font_size=font_size,
             title=title_text if title else '',
+            title_font_size=font_size * 1.5,
             xaxis_tickfont_size=font_size,
             xaxis=dict(
                 title=x_title if x_title else '',
@@ -162,10 +166,13 @@ class DataAnalyzer:
                         x=x_legend,
                         xanchor=x_anchor,
                         yanchor=y_anchor),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
             width=width, height=height
         )
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
@@ -206,7 +213,8 @@ class DataAnalyzer:
                                     x_title: Optional[str] = None, y_title: Optional[str] = None,
                                     one_color: bool = False, sep: str = ',(\S)', w=1,
                                     width: int = 900, height: int = 550,
-                                    font_size: int = 20, font: str = 'Hevletica Neue'):
+                                    font_size: int = 20, font: str = 'Hevletica Neue',
+                                    transparent: bool = False):
         order = order.split(',\n')
         df_res = self.get_categories_from_columns(column, sep, order)
         for tag in df_res['index']:
@@ -218,7 +226,8 @@ class DataAnalyzer:
 
         return self.plot_bar(df_res['index'], df_res['count'], width, height, font_size, font,
                              title=title_text if title else None,
-                             x_title=x_title, y_title=y_title, one_color=one_color)
+                             x_title=x_title, y_title=y_title, one_color=one_color,
+                             transparent=transparent)
 
     def plot_self_assessment(self, w=2):
         fig = go.Figure()
@@ -278,7 +287,8 @@ class DataAnalyzer:
                  font: str, title: Optional[str] = None,
                  x_title: Optional[str] = None,
                  y_title: Optional[str] = None,
-                 one_color: bool = False):
+                 one_color: bool = False,
+                 transparent: bool = False):
         fig = go.Figure()
         x = self.capitalize_list(x)
         if one_color:
@@ -297,6 +307,7 @@ class DataAnalyzer:
 
         fig.update_layout(
             title=title,
+            title_font_size=font_size * 1.5,
             font_family=font,
             font_size=font_size,
             xaxis=dict(
@@ -312,11 +323,15 @@ class DataAnalyzer:
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
             width=width,
             height=height
         )
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
@@ -327,7 +342,8 @@ class DataAnalyzer:
                          font: str, title: Optional[str] = None, title_text: Optional[str] = None,
                          x_title: Optional[str] = None,
                          y_title: Optional[str] = None,
-                         what_show: Optional[str] = None, legend_position: List[str] = ('top', 'left')):
+                         what_show: Optional[str] = None, legend_position: List[str] = ('top', 'left'),
+                         transparent: bool = False):
         dictionary = dict(self.df.loc[1:, column].dropna().value_counts())
         text_info = 'percent' if what_show == 'Percent' else 'percent+label'
         fig = go.Figure(data=[go.Pie(labels=list(dictionary.keys()), values=list(dictionary.values()),
@@ -348,6 +364,7 @@ class DataAnalyzer:
             y_anchor = legend_position[3]
         fig.update_layout(
             title=title_text if title else '',
+            title_font_size=font_size * 1.5,
             font_family=font,
             font_size=font_size,
             xaxis=dict(
@@ -363,8 +380,6 @@ class DataAnalyzer:
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
             width=width,
             height=height,
             legend=dict(font_size=font_size,
@@ -375,26 +390,42 @@ class DataAnalyzer:
                         xanchor=x_anchor,
                         yanchor=y_anchor),
         )
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
         return fig
 
-    def create_gauge_graph(self, column: str):
+    def create_gauge_graph(self, column: str, width: int, height: int,
+                           font_size: int, font: str, transparent: bool):
         promoters = (self.df.loc[1:, column] == 'Promoter').sum() / (len(self.df) - 1)
         detractors = (self.df.loc[1:, column] == 'Detractor').sum() / (len(self.df) - 1)
         fig = go.Figure(go.Indicator(
-            font_family='Hevletica Neue',
             mode="gauge+number",
             value=round(100 * (promoters - detractors), 1),
             domain={'x': [0, 1], 'y': [0, 1]},
             gauge={'axis': {'range': [-100, 100]},
-                   'bar': {'color': 'rgb(224,44,36)', 'thickness': 1}}, ))
+                   'bar': {'color': 'rgb(224,44,36)', 'thickness': 1}}))
 
-        fig.show()
+        fig.update_layout(font_family=font, font_size=font_size, width=width,
+                          height=height)
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
 
-    def create_horizontal_bar_graph(self, column: str, order: Optional[List[str]] = None):
+        return fig
+
+    def create_horizontal_bar_graph(self, column: str, order: Optional[List[str]] = None,
+                                    width: int = 900, height: int = 500,
+                                    transparent: bool = False,
+                                    font_size: int = 20, font: str = 'Hevletica Neue'):
         df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(
             normalize=True))
         df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100)))
@@ -413,7 +444,6 @@ class DataAnalyzer:
                 y=[''],
                 x=[df_temp.loc[row, column]],
                 name=df_temp.loc[row, 'index'],
-                text=df_temp.loc[row, 'index'],
                 orientation='h',
                 marker=dict(color=color)
             ))
@@ -424,7 +454,7 @@ class DataAnalyzer:
                                     text=' ' + str(
                                         df_temp.loc[0, column]) + '%' + '<br> <span style="font-size: 25px;">' +
                                          df_temp.loc[0, 'index'] + '</span>',
-                                    font=dict(family='Hevletica Neue', size=40,
+                                    font=dict(family=font, size=font_size,
                                               color='rgb(255, 255, 255)'),
                                     showarrow=False))
         space = df_temp.loc[0, column]
@@ -436,7 +466,7 @@ class DataAnalyzer:
                                         text=' ' + str(
                                             df_temp.loc[i, column]) + '%' + '<br> <span style="font-size: 25px;">' +
                                              df_temp.loc[i, 'index'] + '</span>',
-                                        font=dict(family='Hevletica Neue', size=40,
+                                        font=dict(family=font, size=font_size,
                                                   color='rgb(255, 255, 255)'),
                                         showarrow=False, align="center"))
             space += df_temp.loc[i, column]
@@ -456,18 +486,26 @@ class DataAnalyzer:
             barmode='stack',
             plot_bgcolor='rgb(255, 255, 255)',
             showlegend=True,
-            annotations=annotations
+            annotations=annotations,
+            width=width,
+            height=height
         )
-        fig.update_layout(font_family='Hevletica Neue',
+        fig.update_layout(font_family=font,
                           legend=dict(
                               orientation="h",
                               yanchor="bottom",
-                              y=-0.02,
+                              y=-0.05,
                               xanchor="center",
                               x=0.48,
-                              font=dict(size=20, color="black")
+                              font=dict(size=font_size / 2, color="black")
                           ))
-        fig.show()
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+
+        return fig
 
     def bar_with_errors(self):
 
