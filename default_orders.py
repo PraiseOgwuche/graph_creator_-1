@@ -48,6 +48,8 @@ known_orders = (
      'Extremely difficult'),
     ('30 minutes or less', '30 to 60 minutes',
      '2-3 hours', '3-4 hours', '5 hours or more'),
+    ('30 minutes or less', '30 to 60 minutes',
+     '2 to 3 hours', '3 to 4 hours', '5 hours or more'),
     ('Network issues (e.g., my internet connection was slow or spotty)',
      'Account & login issues (e.g., I could not login to Forum)',
      'Audio/video issues (e.g., others could not hear or see me, I could not hear or see others)',
