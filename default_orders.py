@@ -59,7 +59,8 @@ known_orders = (
      'Audio/video issues (e.g., others could not hear or see me, I could not hear or see others)',
      'Other (please describe the problem)'),
     ('Not very well at all', 'Not well', 'Well', 'Moderately well', 'Extremely well'),
-    ('Not well at all', 'Slightly well', 'Moderately well', 'Well', 'Extremely well')
+    ('Not well at all', 'Slightly well', 'Moderately well', 'Well', 'Extremely well'),
+    ('Less than 30 minutes', '30-59 minutes', '60-90 minutes', 'More than 90 minutes')
 )
 
 
