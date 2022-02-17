@@ -22,8 +22,10 @@ class GraphParams:
         self.transparent = transparent
 
 
-def graph_params(width, height, text_size, add_legend_pos, title, w):
+def graph_params(width, height, text_size, add_legend_pos, title, w, def_text = None):
     with st.expander("Graph Parameters"):
+        if def_text is not None:
+            st.write(def_text)
         width = st.number_input('Width', min_value=500, max_value=5000, value=width)
         height = st.number_input('Height', min_value=300, max_value=5000, value=height)
         font_size = st.number_input('Font Size', min_value=10, max_value=60, value=text_size)
@@ -37,7 +39,7 @@ def graph_params(width, height, text_size, add_legend_pos, title, w):
         else:
             title_text = None
         if w:
-            num_of_words_per_line = st.number_input('Max words per line:', min_value=1, max_value=8, value=2)
+            num_of_words_per_line = st.number_input('Max words per line:', min_value=1, max_value=12, value=2)
         else:
             num_of_words_per_line = None
         if add_legend_pos:
@@ -48,9 +50,9 @@ def graph_params(width, height, text_size, add_legend_pos, title, w):
                                    col2.selectbox('y-axis:', ['bottom', 'middle', 'top'], index=2))
             elif legend_position_type == 'Advanced':
                 col1, col2 = st.columns(2)
-                legend_position = (st.number_input('x-value:', max_value=2., min_value=-2., value=1., step=0.05),
-                                   st.number_input('y-value:', max_value=2., min_value=-2., value=1., step=0.05),
-                                   col1.selectbox('x-alignment:', ['right', 'center', 'left'], index=2),
+                legend_position = (st.number_input('x-value:', max_value=2., min_value=-2., value=0.5, step=0.05),
+                                   st.number_input('y-value:', max_value=2., min_value=-2., value=-0.2, step=0.05),
+                                   col1.selectbox('x-alignment:', ['right', 'center', 'left'], index=1),
                                    col2.selectbox('y-alignment:', ['bottom', 'middle', 'top'], index=2),
                                    st.radio('Legend Orientation:', ['horizontal', 'vertical']))
         else:
@@ -106,7 +108,10 @@ if uploaded_file is not None:
                                      value=session_state.options, height=150)
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
-            gp = graph_params(900, 600, 24, False, dataframe.loc[0, column], True)
+            gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font')
         if column:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.create_bar_graph(column, width=gp.width, height=gp.height,
@@ -116,7 +121,7 @@ if uploaded_file is not None:
                                                             title=gp.title, title_text=gp.title_text,
                                                             w=gp.num_of_words_per_line - 1, transparent=gp.transparent,
                                                             percents=percents)
-            graph_for_download = graph_creator.create_bar_graph(column, width=gp.width * 2, height=gp.height * 2,
+            graph_for_download = graph_creator.create_bar_graph(column, width=gp.width * 2.5, height=gp.height * 2,
                                                                 font_size=gp.font_size * 2, font='Arial',
                                                                 order=order, one_color=True,
                                                                 x_title=gp.x_title, y_title=gp.y_title,
@@ -124,7 +129,7 @@ if uploaded_file is not None:
                                                                 w=gp.num_of_words_per_line - 1,
                                                                 transparent=gp.transparent, percents=percents)
             st.plotly_chart(graph_for_plot)
-            scale = 6 if gp.width * 2 > 3000 else 8
+            scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
     elif option == 'Group Bar Graph':
         columns = st.sidebar.multiselect('Select columns to create graph for:', tuple(dataframe.columns))
@@ -145,7 +150,7 @@ if uploaded_file is not None:
                 else:
                     order = st.text_area('Select the order for the options:',
                                          value=session_state.options, height=150)
-            gp = graph_params(1200, 700, 18, True, '', True)
+            gp = graph_params(1500, 700, 21, True, '', True)
         if columns:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.create_bar_graph_group(columns, width=gp.width, height=gp.height,
@@ -164,7 +169,7 @@ if uploaded_file is not None:
                                                                       legend_position=gp.legend_position,
                                                                       transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
-            scale = 6 if gp.width * 2 > 3000 else 8
+            scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
     elif option == 'Multiple-Choice Question Bar Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
@@ -201,7 +206,7 @@ if uploaded_file is not None:
                                                                            w=gp.num_of_words_per_line - 1,
                                                                            transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
-            scale = 6 if gp.width * 2 > 3000 else 8
+            scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
 
     elif option == 'Pie Chart':
@@ -236,7 +241,7 @@ if uploaded_file is not None:
                                                                 what_show=what_show, legend_position=gp.legend_position,
                                                                 transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
-            scale = 6 if gp.width * 2 > 3000 else 8
+            scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
 
 
@@ -258,7 +263,7 @@ if uploaded_file is not None:
                                                                   font_size=font_size, font=font,
                                                                   transparent=transparent)
             st.plotly_chart(graph_for_plot)
-            scale = 6 if width * 2 > 3000 else 8
+            scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
 
     elif option == 'Horizontal Bar Graph':
@@ -280,5 +285,5 @@ if uploaded_file is not None:
                                                                            font_size=font_size, font=font,
                                                                            transparent=transparent)
             st.plotly_chart(graph_for_plot)
-            scale = 6 if width * 2 > 3000 else 8
+            scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
