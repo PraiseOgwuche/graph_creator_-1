@@ -24,10 +24,10 @@ class GraphParams:
 
 def graph_params(width, height, text_size, add_legend_pos, title, w):
     with st.expander("Graph Parameters"):
-        width = st.number_input('Width', min_value=500, max_value=2500, value=width)
-        height = st.number_input('Height', min_value=300, max_value=1500, value=height)
+        width = st.number_input('Width', min_value=500, max_value=5000, value=width)
+        height = st.number_input('Height', min_value=300, max_value=5000, value=height)
         font_size = st.number_input('Font Size', min_value=10, max_value=60, value=text_size)
-        font = st.selectbox('Font', ['Hevletica', 'Hevletica Neue', 'Arial'], index=1)
+        font = st.selectbox('Font', ['Helvetica', 'Helvetica Neue', 'Arial'], index=1)
         transparent = st.checkbox('Transparent Background Graph')
         x_title = st.text_input('X-axis title:')
         y_title = st.text_input('Y-axis title:')
@@ -37,7 +37,7 @@ def graph_params(width, height, text_size, add_legend_pos, title, w):
         else:
             title_text = None
         if w:
-            num_of_words_per_line = st.number_input('Max words per line:', min_value=1, max_value=6, value=2)
+            num_of_words_per_line = st.number_input('Max words per line:', min_value=1, max_value=8, value=2)
         else:
             num_of_words_per_line = None
         if add_legend_pos:
@@ -104,7 +104,9 @@ if uploaded_file is not None:
             else:
                 order = st.text_area('Select the order for the options:',
                                      value=session_state.options, height=150)
-            gp = graph_params(900, 600, 18, False, dataframe.loc[0, column], True)
+            percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
+                                   value=True)
+            gp = graph_params(900, 600, 24, False, dataframe.loc[0, column], True)
         if column:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.create_bar_graph(column, width=gp.width, height=gp.height,
@@ -112,14 +114,15 @@ if uploaded_file is not None:
                                                             order=order, one_color=True,
                                                             x_title=gp.x_title, y_title=gp.y_title,
                                                             title=gp.title, title_text=gp.title_text,
-                                                            w=gp.num_of_words_per_line - 1, transparent=gp.transparent)
+                                                            w=gp.num_of_words_per_line - 1, transparent=gp.transparent,
+                                                            percents=percents)
             graph_for_download = graph_creator.create_bar_graph(column, width=gp.width * 2, height=gp.height * 2,
                                                                 font_size=gp.font_size * 2, font='Arial',
                                                                 order=order, one_color=True,
                                                                 x_title=gp.x_title, y_title=gp.y_title,
                                                                 title=gp.title, title_text=gp.title_text,
                                                                 w=gp.num_of_words_per_line - 1,
-                                                                transparent=gp.transparent)
+                                                                transparent=gp.transparent, percents=percents)
             st.plotly_chart(graph_for_plot)
             scale = 6 if gp.width * 2 > 3000 else 8
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
@@ -179,7 +182,7 @@ if uploaded_file is not None:
             else:
                 order = st.text_area('Select the order for the options:',
                                      value=session_state.options, height=250)
-            gp = graph_params(900, 600, 18, False, dataframe.loc[0, column], True)
+            gp = graph_params(900, 600, 20, False, dataframe.loc[0, column], True)
         if column:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.create_chart_for_categories(column, width=gp.width, height=gp.height,
@@ -241,10 +244,10 @@ if uploaded_file is not None:
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         with st.sidebar:
             with st.expander("Graph Parameters"):
-                width = st.number_input('Width', min_value=500, max_value=2500, value=700)
-                height = st.number_input('Height', min_value=300, max_value=1500, value=500)
+                width = st.number_input('Width', min_value=500, max_value=5000, value=700)
+                height = st.number_input('Height', min_value=300, max_value=5000, value=500)
                 font_size = st.number_input('Font Size', min_value=10, max_value=60, value=20)
-                font = st.selectbox('Font', ['Hevletica', 'Hevletica Neue', 'Arial'], index=1)
+                font = st.selectbox('Font', ['Helvetica', 'Helvetica Neue', 'Arial'], index=1)
                 transparent = st.checkbox('Transparent Background Graph')
 
         if column:
@@ -262,10 +265,10 @@ if uploaded_file is not None:
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         with st.sidebar:
             with st.expander("Graph Parameters"):
-                width = st.number_input('Width', min_value=500, max_value=2500, value=900)
-                height = st.number_input('Height', min_value=300, max_value=1500, value=500)
+                width = st.number_input('Width', min_value=500, max_value=3000, value=900)
+                height = st.number_input('Height', min_value=300, max_value=3000, value=500)
                 font_size = st.number_input('Font Size', min_value=10, max_value=80, value=40)
-                font = st.selectbox('Font', ['Hevletica', 'Hevletica Neue', 'Arial'], index=1)
+                font = st.selectbox('Font', ['Helvetica', 'Helvetica Neue', 'Arial'], index=1)
                 transparent = st.checkbox('Transparent Background Graph')
 
         if column:

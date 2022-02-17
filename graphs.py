@@ -61,10 +61,13 @@ class DataAnalyzer:
                          x_title: Optional[str] = None, y_title: Optional[str] = None,
                          one_color: bool = True, width: int = 900, height: int = 550,
                          font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
-                         transparent: bool = False):
+                         transparent: bool = False, percents: bool = True):
 
-        df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
-        df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
+        if percents:
+            df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
+            df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
+        else:
+            df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts())
         order = order.split(',\n')
         if order:
             not_in_df = [index for index in order if index not in set(list(
@@ -79,7 +82,7 @@ class DataAnalyzer:
         return self.plot_bar(x, df_temp[column], width, height, font_size, font,
                              title=title_text if title else None,
                              x_title=x_title, y_title=y_title, one_color=one_color,
-                             transparent=transparent)
+                             transparent=transparent, percents=percents)
 
     def create_bar_graph_group(self, columns: List[str], title: Optional[bool] = False,
                                title_text: Optional[str] = None, order: str = None,
@@ -288,21 +291,22 @@ class DataAnalyzer:
                  x_title: Optional[str] = None,
                  y_title: Optional[str] = None,
                  one_color: bool = False,
-                 transparent: bool = False):
+                 transparent: bool = False,
+                 percents: bool = True):
         fig = go.Figure()
         x = self.capitalize_list(x)
         if one_color:
             fig.add_trace(go.Bar(x=[str(xs) + '‏‏‎ ‎' for xs in x],
                                  y=y,
                                  marker_color='rgb(224,44,36)',
-                                 texttemplate='%{y}', textposition='outside',
+                                 texttemplate='%{y}' if percents else '%{y}', textposition='outside',
                                  textfont_size=font_size
                                  ))
         else:
             fig.add_trace(go.Bar(x=x,
                                  y=[round(i, 1) for i in y],
                                  marker_color=self.color_palette[:len(x)],
-                                 texttemplate='%{y}', textposition='outside'
+                                 texttemplate='%{y}' if percents else '%{y}', textposition='outside'
                                  ))
 
         fig.update_layout(
@@ -319,7 +323,7 @@ class DataAnalyzer:
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%'
+                tickformat='1%' if percents else '1'
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,

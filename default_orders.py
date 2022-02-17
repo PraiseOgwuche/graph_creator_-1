@@ -60,9 +60,13 @@ known_orders = (
      'Other (please describe the problem)'),
     ('Not very well at all', 'Not well', 'Well', 'Moderately well', 'Extremely well'),
     ('Not well at all', 'Slightly well', 'Moderately well', 'Well', 'Extremely well'),
-    ('Less than 30 minutes', '30-59 minutes', '60-90 minutes', 'More than 90 minutes')
+    ('Less than 30 minutes', '30-59 minutes', '60-90 minutes', 'More than 90 minutes'),
+    ('Not effective at all', 'Slightly effective', 'Moderately effective', 'Effective', 'Extremely effective'),
+    ('Not effective at all', 'Slightly effective', 'Moderately effective', 'Very effective', 'Extremely effective'),
+    ('Strongly disagree', 'Somewhat disagree',  'Moderately agree', 'Agree', 'Strongly agree'),
+    ('Not effectively at all', 'Slightly effectively', 'Moderately effectively', 'Very effectively',
+     'Extremely effectively')
 )
-
 
 def check_if_order_is_known(order):
     for possible_order in known_orders:
