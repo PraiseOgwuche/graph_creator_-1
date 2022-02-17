@@ -39,7 +39,7 @@ def graph_params(width, height, text_size, add_legend_pos, title, w, def_text = 
         else:
             title_text = None
         if w:
-            num_of_words_per_line = st.number_input('Max words per line:', min_value=1, max_value=12, value=2)
+            num_of_words_per_line = st.number_input('Max words per line:', min_value=1, max_value=15, value=2)
         else:
             num_of_words_per_line = None
         if add_legend_pos:
@@ -129,7 +129,7 @@ if uploaded_file is not None:
                                                                 w=gp.num_of_words_per_line - 1,
                                                                 transparent=gp.transparent, percents=percents)
             st.plotly_chart(graph_for_plot)
-            scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
     elif option == 'Group Bar Graph':
         columns = st.sidebar.multiselect('Select columns to create graph for:', tuple(dataframe.columns))

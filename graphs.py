@@ -152,7 +152,6 @@ class DataAnalyzer:
                 title=x_title if x_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size
-
             ),
             yaxis=dict(
                 title=y_title if y_title else '',
@@ -294,7 +293,6 @@ class DataAnalyzer:
                  transparent: bool = False,
                  percents: bool = True):
         fig = go.Figure()
-        x = self.capitalize_list(x)
         if one_color:
             fig.add_trace(go.Bar(x=[str(xs) + '‏‏‎ ‎' for xs in x],
                                  y=y,
@@ -310,6 +308,7 @@ class DataAnalyzer:
                                  ))
 
         fig.update_layout(
+
             title=title,
             title_font_size=font_size * 1.5,
             font_family=font,
@@ -317,7 +316,7 @@ class DataAnalyzer:
             xaxis=dict(
                 title=x_title if x_title else '',
                 titlefont_size=font_size,
-                tickfont_size=font_size,
+                tickfont_size=font_size
             ),
             yaxis=dict(
                 title=y_title if y_title else '',
@@ -351,7 +350,7 @@ class DataAnalyzer:
         dictionary = dict(self.df.loc[1:, column].dropna().value_counts())
         text_info = 'percent' if what_show == 'Percent' else 'percent+label'
         fig = go.Figure(data=[go.Pie(labels=list(dictionary.keys()), values=list(dictionary.values()),
-                                     marker_colors=['rgb(132,29,22)', 'rgb(222,46,37)', 'rgb(153,153,153)'],
+                                     marker_colors=['rgb(222,46,37)', 'rgb(170,170,170)'],
                                      textinfo=text_info)])
 
         if len(legend_position) == 2:
