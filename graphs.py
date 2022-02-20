@@ -91,12 +91,14 @@ class DataAnalyzer:
                                width: int = 900, height: int = 550,
                                font_size: int = 20, font: str = 'Hevletica Neue',
                                legend_position: List[str] = ('top', 'left'),
-                               transparent: bool = False):
+                               transparent: bool = False, remove: bool = False):
         list_vals = [self.df.loc[0, column] for column in columns]
         for ind, val in enumerate(list_vals):
-            list_vals[ind] = list_vals[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
+            if remove:
+                title_text, list_vals[ind] = re.split(' - ', list_vals[ind])
+            list_vals[ind] = list_vals[ind].replace(list_vals[ind] , re.sub('(' + '\s\S*?' * int(w) + ')\s',
                                                                 r'\1<br> ',
-                                                                val))
+                                                                            list_vals[ind]))
         fig = go.Figure()
         order = order.split(',\n')
         if len(order) <= 5:
