@@ -36,7 +36,7 @@ def graph_params(width, height, text_size, add_legend_pos, title, w, def_text=No
             inside_outside = st.selectbox('Text position relative to the bars', ['inside', 'outside'], index=1)
         else:
             inside_outside = None
-        transparent = st.checkbox('Transparent Background Graph')
+        transparent = st.checkbox('Transparent Background Graph', value=True)
         x_title = st.text_input('X-axis title:')
         y_title = st.text_input('Y-axis title:')
         title_box = st.checkbox('Add title')
@@ -303,7 +303,6 @@ if uploaded_file is not None:
             column = st.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
             data_column = st.selectbox('Select data column to create graph for:', tuple(dataframe.columns))
             round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1)
-            show_average = st.checkbox('Show average line on the graph')
             save = st.checkbox('Save the order')
             if not save:
                 unique_vals = [x for x in list(dataframe[column].unique()) if str(x) != 'nan']
@@ -316,6 +315,10 @@ if uploaded_file is not None:
             else:
                 order = st.text_area('Select the order for the options:',
                                      value=session_state.options, height=150)
+            show_average = st.checkbox('Show average line on the graph')
+            if show_average:
+                average_line_x = st.selectbox('Select bar to locate the average line label', order.split(",\n"),
+                                              index=len(order.split(",\n")) - 1)
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
@@ -334,7 +337,8 @@ if uploaded_file is not None:
                                                              percents=percents, show_average=show_average,
                                                              avg_line_title='',
                                                              inside_outside_pos=gp.inside_outside,
-                                                             round_nums=round_nums
+                                                             round_nums=round_nums,
+                                                             average_line_x=average_line_x
                                                              )
             graph_for_download = graph_creator.create_simple_bar(course_col=column, column=data_column,
                                                                  width=gp.width * 2.5, height=gp.height * 2,
@@ -347,7 +351,8 @@ if uploaded_file is not None:
                                                                  show_average=show_average,
                                                                  avg_line_title='',
                                                                  inside_outside_pos=gp.inside_outside,
-                                                                 round_nums=round_nums)
+                                                                 round_nums=round_nums,
+                                                                 average_line_x=average_line_x)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')

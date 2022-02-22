@@ -610,7 +610,7 @@ class DataAnalyzer:
         # fig.write_image("fig.png", height=550, width=900, scale=10)
         fig.show()
 
-    def create_simple_bar(self, avg_line_title: str,
+    def create_simple_bar(self, avg_line_title: str, average_line_x: str,
                           course_col: str, column: str, title: Optional[bool] = False, title_text: Optional[str] = None,
                           order: Optional[str] = None,
                           x_title: Optional[str] = None, y_title: Optional[str] = None,
@@ -651,7 +651,7 @@ class DataAnalyzer:
                 num = int(num)
             num = str(num)
 
-            fig.add_annotation(x=x[-2], y=overall + overall * 0.05,
+            fig.add_annotation(x=average_line_x, y=overall + overall * 0.05,
                                text='Average = ' + num + addition,
                                showarrow=False,
                                yshift=10)
