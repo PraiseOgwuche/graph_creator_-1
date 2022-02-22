@@ -8,7 +8,7 @@ from default_orders import check_if_order_is_known
 
 class GraphParams:
     def __init__(self, width, height, font_size, font, x_title, y_title, title, title_text, num_of_words_per_line,
-                 legend_position, transparent):
+                 legend_position, transparent, inside_outside):
         self.width = width
         self.height = height
         self.font_size = font_size
@@ -20,9 +20,11 @@ class GraphParams:
         self.num_of_words_per_line = num_of_words_per_line
         self.legend_position = legend_position
         self.transparent = transparent
+        self.inside_outside = inside_outside
 
 
-def graph_params(width, height, text_size, add_legend_pos, title, w, def_text = None):
+def graph_params(width, height, text_size, add_legend_pos, title, w, def_text=None,
+                 show_inside_outside=False):
     with st.expander("Graph Parameters"):
         if def_text is not None:
             st.write(def_text)
@@ -30,6 +32,10 @@ def graph_params(width, height, text_size, add_legend_pos, title, w, def_text = 
         height = st.number_input('Height', min_value=300, max_value=5000, value=height)
         font_size = st.number_input('Font Size', min_value=10, max_value=60, value=text_size)
         font = st.selectbox('Font', ['Helvetica', 'Helvetica Neue', 'Arial'], index=1)
+        if show_inside_outside:
+            inside_outside = st.selectbox('Text position relative to the bars', ['inside', 'outside'], index=1)
+        else:
+            inside_outside = None
         transparent = st.checkbox('Transparent Background Graph')
         x_title = st.text_input('X-axis title:')
         y_title = st.text_input('Y-axis title:')
@@ -58,7 +64,7 @@ def graph_params(width, height, text_size, add_legend_pos, title, w, def_text = 
         else:
             legend_position = None
     return GraphParams(width, height, font_size, font, x_title, y_title, title_box, title_text, num_of_words_per_line,
-                       legend_position, transparent)
+                       legend_position, transparent, inside_outside)
 
 
 st.title("Graph Creator")
@@ -83,15 +89,14 @@ if uploaded_file is not None:
 
     option = st.sidebar.selectbox(
         'Choose graph type to plot',
-        ('Bar Graph', 'Group Bar Graph',
+        ('Bar Graph for Categorical Data', 'Bar Graph for Numeric Data', 'Group Bar Graph',
          'Multiple-Choice Question Bar Graph',
          'Self-Assessment Graph (requires specific data format)',
          'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph',
-         'Bar Graph with Errors', 'Stacked Bar Graph',
-         'Simple Bar Graph', 'Line Graph', 'Scatter Graph with Regression Line'))
+         'Bar Graph with Errors', 'Stacked Bar Graph', 'Line Graph', 'Scatter Graph with Regression Line'))
     session_state = SessionState.get(name='', options='')
     graph_creator = DataAnalyzer(dataframe)
-    if option == 'Bar Graph':
+    if option == 'Bar Graph for Categorical Data':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         with st.sidebar:
             save = st.checkbox('Save the order')
@@ -291,4 +296,58 @@ if uploaded_file is not None:
                                                                            transparent=transparent)
             st.plotly_chart(graph_for_plot)
             scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
+            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+
+    elif option == 'Bar Graph for Numeric Data':
+        with st.sidebar:
+            column = st.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
+            data_column = st.selectbox('Select data column to create graph for:', tuple(dataframe.columns))
+            round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1)
+            show_average = st.checkbox('Show average line on the graph')
+            save = st.checkbox('Save the order')
+            if not save:
+                unique_vals = [x for x in list(dataframe[column].unique()) if str(x) != 'nan']
+                ord = check_if_order_is_known(unique_vals)
+                if ord is None:
+                    ord = sorted(unique_vals)
+                order = st.text_area('Select the order for the options:',
+                                     value=',\n'.join(ord), height=150)
+                session_state.options = ',\n'.join(ord)
+            else:
+                order = st.text_area('Select the order for the options:',
+                                     value=session_state.options, height=150)
+            percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
+                                   value=True)
+            gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font', show_inside_outside=True)
+        if column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.create_simple_bar(course_col=column, column=data_column,
+                                                             width=gp.width, height=gp.height,
+                                                             font_size=gp.font_size, font=gp.font,
+                                                             order=order, one_color=True,
+                                                             x_title=gp.x_title, y_title=gp.y_title,
+                                                             title=gp.title, title_text=gp.title_text,
+                                                             w=gp.num_of_words_per_line - 1, transparent=gp.transparent,
+                                                             percents=percents, show_average=show_average,
+                                                             avg_line_title='',
+                                                             inside_outside_pos=gp.inside_outside,
+                                                             round_nums=round_nums
+                                                             )
+            graph_for_download = graph_creator.create_simple_bar(course_col=column, column=data_column,
+                                                                 width=gp.width * 2.5, height=gp.height * 2,
+                                                                 font_size=gp.font_size * 2, font='Arial',
+                                                                 order=order, one_color=True,
+                                                                 x_title=gp.x_title, y_title=gp.y_title,
+                                                                 title=gp.title, title_text=gp.title_text,
+                                                                 w=gp.num_of_words_per_line - 1,
+                                                                 transparent=gp.transparent, percents=percents,
+                                                                 show_average=show_average,
+                                                                 avg_line_title='',
+                                                                 inside_outside_pos=gp.inside_outside,
+                                                                 round_nums=round_nums)
+            st.plotly_chart(graph_for_plot)
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
             st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')

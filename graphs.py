@@ -6,6 +6,7 @@ from typing import Optional, List
 import re
 import numpy as np
 import chart_studio.plotly as py
+from copy import deepcopy
 from math import isclose, sqrt
 
 pd.options.mode.chained_assignment = None
@@ -96,9 +97,9 @@ class DataAnalyzer:
         for ind, val in enumerate(list_vals):
             if remove:
                 title_text, list_vals[ind] = re.split(' - ', list_vals[ind])
-            list_vals[ind] = list_vals[ind].replace(list_vals[ind] , re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                                r'\1<br> ',
-                                                                            list_vals[ind]))
+            list_vals[ind] = list_vals[ind].replace(list_vals[ind], re.sub('(' + '\s\S*?' * int(w) + ')\s',
+                                                                           r'\1<br> ',
+                                                                           list_vals[ind]))
         fig = go.Figure()
         order = order.split(',\n')
         if len(order) <= 5:
@@ -293,20 +294,22 @@ class DataAnalyzer:
                  y_title: Optional[str] = None,
                  one_color: bool = False,
                  transparent: bool = False,
-                 percents: bool = True):
+                 percents: bool = True,
+                 textposition: str = 'outside',
+                 showlegend: bool = False):
         fig = go.Figure()
         if one_color:
-            fig.add_trace(go.Bar(x=[str(xs) + '‏‏‎ ‎' for xs in x],
+            fig.add_trace(go.Bar(x=x,
                                  y=y,
                                  marker_color='rgb(224,44,36)',
-                                 texttemplate='%{y}' if percents else '%{y}', textposition='outside',
-                                 textfont_size=font_size
+                                 texttemplate='%{y}' if percents else '%{y}',
+                                 textfont_size=font_size, textposition=textposition
                                  ))
         else:
             fig.add_trace(go.Bar(x=x,
-                                 y=[round(i, 1) for i in y],
+                                 y=y,
                                  marker_color=self.color_palette[:len(x)],
-                                 texttemplate='%{y}' if percents else '%{y}', textposition='outside'
+                                 texttemplate='%{y}' if percents else '%{y}', textposition=textposition,
                                  ))
 
         fig.update_layout(
@@ -329,7 +332,8 @@ class DataAnalyzer:
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
             width=width,
-            height=height
+            height=height,
+            showlegend=showlegend
         )
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
@@ -606,52 +610,52 @@ class DataAnalyzer:
         # fig.write_image("fig.png", height=550, width=900, scale=10)
         fig.show()
 
-    def create_simple_bar(self, course_col, col, perc, y_title, title, avg_line_title, inside_outside_pos):
-        df = self.df.iloc[:-1, :]
-        overall = self.df.loc[len(self.df) - 1, col]
+    def create_simple_bar(self, avg_line_title: str,
+                          course_col: str, column: str, title: Optional[bool] = False, title_text: Optional[str] = None,
+                          order: Optional[str] = None,
+                          x_title: Optional[str] = None, y_title: Optional[str] = None,
+                          one_color: bool = True, width: int = 900, height: int = 550,
+                          font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
+                          transparent: bool = False, percents: bool = True,
+                          inside_outside_pos: str = 'outside', show_average: bool = False,
+                          round_nums: int = 2):
+        df = deepcopy(self.df)
+        overall = sum(self.df.loc[:, column]) / len(self.df.loc[:, column])
+        order = order.split(',\n')
+        df = df.set_index(course_col)
+        if order:
+            not_in_df = [index for index in order if index not in set(list(
+                df.index))]
+            for i in not_in_df:
+                df.loc[i, :] = [np.nan] * len(df.columns)
+            df = df.loc[order, ]
+        df = df.fillna(0).reset_index()
         x = list(df[course_col]).copy()
-        x = self.capitalize_list(x)
         for ind, val in enumerate(x):
             if len(val) >= 18:
                 x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 1 + ')\s',
                                                     r'\1<br> ', val))
-        v = self.df[col] * 100 if perc else self.df[col]
-        fig = go.Figure([go.Bar(x=x, y=[round(i, 1) for i in v],
-                                marker_color=self.color_palette[-3],
-                                texttemplate='%{y}', textposition=inside_outside_pos,
-                                showlegend=False, textfont_size=16),
-                         go.Scatter(x=x, y=[round(overall, 1)] * len(x),
-                                    marker_color=self.color_palette[-1],
-                                    name=avg_line_title)])
-        fig.add_annotation(x=x[-2], y=overall + overall * 0.05,
-                           text='Average = ' + str(overall),
-                           showarrow=False,
-                           yshift=10)
-        fig.update_layout(
-            font_family='Hevletica Neue',
-            font_size=16,
-            title=title if title else '',
-            xaxis_tickfont_size=16,
-            xaxis=dict(
-                title='',
-                titlefont_size=16,
-                tickfont_size=16,
-            ),
-            yaxis=dict(
-                title=y_title,
-                titlefont_size=16,
-                tickfont_size=16
-            ),
-            bargap=0.25,  # gap between bars of adjacent location coordinates.
-            template=self.large_rockwell_template,
-            legend=dict(font=dict(family="Hevletica Neue", size=16)
-                        ))
-        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
-        fig.update_xaxes(tickangle=0, automargin=True)
-        # fig.write_image("fig.png", height=550, width=900, scale=10)
-        fig.show()
+        v = self.df[column]
+        fig = self.plot_bar(x, [round(i, int(round_nums)) for i in v], width, height, font_size, font,
+                            title=title_text if title else None,
+                            x_title=x_title, y_title=y_title, one_color=one_color,
+                            transparent=transparent, percents=percents, textposition=inside_outside_pos,
+                            showlegend=False)
+        if show_average:
+            fig.add_trace(go.Scatter(x=x, y=[round(overall, int(round_nums))] * len(x),
+                                     marker_color=self.color_palette[-1],
+                                     name=avg_line_title))
+            addition = '%' if percents else ''
+            num = round(overall, int(round_nums)) * 100 if percents else round(overall, int(round_nums))
+            if num % 1 == 0:
+                num = int(num)
+            num = str(num)
+
+            fig.add_annotation(x=x[-2], y=overall + overall * 0.05,
+                               text='Average = ' + num + addition,
+                               showarrow=False,
+                               yshift=10)
+        return fig
 
     def plot_line(self, time_col, list_of_cols, title, y_title, x_title):
         fig = go.Figure()
