@@ -126,16 +126,9 @@ if uploaded_file is not None:
                                                             title=gp.title, title_text=gp.title_text,
                                                             w=gp.num_of_words_per_line - 1, transparent=gp.transparent,
                                                             percents=percents)
-            graph_for_download = graph_creator.create_bar_graph(column, width=gp.width * 2.5, height=gp.height * 2,
-                                                                font_size=gp.font_size * 2, font='Arial',
-                                                                order=order, one_color=True,
-                                                                x_title=gp.x_title, y_title=gp.y_title,
-                                                                title=gp.title, title_text=gp.title_text,
-                                                                w=gp.num_of_words_per_line - 1,
-                                                                transparent=gp.transparent, percents=percents)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
-            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
     elif option == 'Group Bar Graph':
         columns = st.sidebar.multiselect('Select columns to create graph for:', tuple(dataframe.columns))
         with st.sidebar:
@@ -170,17 +163,9 @@ if uploaded_file is not None:
                                                                   w=gp.num_of_words_per_line - 1,
                                                                   legend_position=gp.legend_position,
                                                                   transparent=gp.transparent, remove=remove)
-            graph_for_download = graph_creator.create_bar_graph_group(columns, width=gp.width * 2, height=gp.height * 2,
-                                                                      font_size=gp.font_size * 2, font='Arial',
-                                                                      order=order, x_title=gp.x_title,
-                                                                      y_title=gp.y_title,
-                                                                      title=gp.title, title_text=gp.title_text,
-                                                                      w=gp.num_of_words_per_line - 1,
-                                                                      legend_position=gp.legend_position,
-                                                                      transparent=gp.transparent, remove=remove)
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
-            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
     elif option == 'Multiple-Choice Question Bar Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         with st.sidebar:
@@ -207,17 +192,9 @@ if uploaded_file is not None:
                                                                        title=gp.title, title_text=gp.title_text,
                                                                        w=gp.num_of_words_per_line - 1,
                                                                        transparent=gp.transparent)
-            graph_for_download = graph_creator.create_chart_for_categories(column, width=gp.width * 2,
-                                                                           height=gp.height * 2,
-                                                                           font_size=gp.font_size * 2, font='Arial',
-                                                                           order=order, one_color=True,
-                                                                           x_title=gp.x_title, y_title=gp.y_title,
-                                                                           title=gp.title, title_text=gp.title_text,
-                                                                           w=gp.num_of_words_per_line - 1,
-                                                                           transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
-            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
 
     elif option == 'Pie Chart':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
@@ -244,15 +221,10 @@ if uploaded_file is not None:
                                                             title=gp.title, title_text=gp.title_text,
                                                             what_show=what_show, legend_position=gp.legend_position,
                                                             transparent=gp.transparent)
-            graph_for_download = graph_creator.create_pie_chart(column, width=gp.width * 2, height=gp.height * 2,
-                                                                font_size=gp.font_size * 2, font='Arial',
-                                                                x_title=gp.x_title, y_title=gp.y_title,
-                                                                title=gp.title, title_text=gp.title_text,
-                                                                what_show=what_show, legend_position=gp.legend_position,
-                                                                transparent=gp.transparent)
+
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
-            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
 
 
     elif option == 'Gauge Graph':
@@ -269,12 +241,9 @@ if uploaded_file is not None:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.create_gauge_graph(column, width=width, height=height,
                                                               font_size=font_size, font=font, transparent=transparent)
-            graph_for_download = graph_creator.create_gauge_graph(column, width=width, height=height,
-                                                                  font_size=font_size, font=font,
-                                                                  transparent=transparent)
             st.plotly_chart(graph_for_plot)
             scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
-            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
 
     elif option == 'Horizontal Bar Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
@@ -291,12 +260,9 @@ if uploaded_file is not None:
             graph_for_plot = graph_creator.create_horizontal_bar_graph(column, width=width, height=height,
                                                                        font_size=font_size, font=font,
                                                                        transparent=transparent)
-            graph_for_download = graph_creator.create_horizontal_bar_graph(column, width=width, height=height,
-                                                                           font_size=font_size, font=font,
-                                                                           transparent=transparent)
             st.plotly_chart(graph_for_plot)
             scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
-            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
 
     elif option == 'Bar Graph for Numeric Data':
         with st.sidebar:
@@ -340,19 +306,6 @@ if uploaded_file is not None:
                                                              round_nums=round_nums,
                                                              average_line_x=average_line_x
                                                              )
-            graph_for_download = graph_creator.create_simple_bar(course_col=column, column=data_column,
-                                                                 width=gp.width * 2.5, height=gp.height * 2,
-                                                                 font_size=gp.font_size * 2, font='Arial',
-                                                                 order=order, one_color=True,
-                                                                 x_title=gp.x_title, y_title=gp.y_title,
-                                                                 title=gp.title, title_text=gp.title_text,
-                                                                 w=gp.num_of_words_per_line - 1,
-                                                                 transparent=gp.transparent, percents=percents,
-                                                                 show_average=show_average,
-                                                                 avg_line_title='',
-                                                                 inside_outside_pos=gp.inside_outside,
-                                                                 round_nums=round_nums,
-                                                                 average_line_x=average_line_x)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
-            st.download_button('Download Plot', graph_for_download.to_image(scale=scale), 'image.png')
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
