@@ -211,7 +211,8 @@ class DataAnalyzer:
         df_res = df_res[df_res['index'] != 'nan']
         df_res['count'] = [i / sum(df_res['count']) for i in df_res['count']]
         df_res['count'] = np.array(self.round_to_100(np.array(df_res['count'] * 100))) / 100
-        return df_res
+        df_res['index'] = pd.Categorical(df_res['index'], order)
+        return df_res.sort_values('index')
 
     def create_chart_for_categories(self, column: str, title: Optional[bool] = False,
                                     title_text: Optional[str] = None, order: Optional[str] = None,
