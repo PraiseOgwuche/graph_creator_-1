@@ -189,6 +189,7 @@ class DataAnalyzer:
         temp_df = self.df.copy()
         temp_df.loc[1:, column] = [re.split(sep, str(i)) for i in temp_df.loc[1:, column]]
         df_res = pd.DataFrame(columns=['count'])
+        responses_num = len(temp_df.loc[1:, column])
         for index_row, tag_list in enumerate(temp_df.loc[1:, column]):
             for index_tag, tag in enumerate(tag_list):
                 if len(tag) == 1:
@@ -209,8 +210,8 @@ class DataAnalyzer:
                     df_res.loc[string, 'count'] = 0
         df_res = df_res.reset_index()
         df_res = df_res[df_res['index'] != 'nan']
-        df_res['count'] = [i / sum(df_res['count']) for i in df_res['count']]
-        df_res['count'] = np.array(self.round_to_100(np.array(df_res['count'] * 100))) / 100
+        df_res['count'] = [i / responses_num for i in df_res['count']]
+        df_res['count'] = [round(i, 2) for i in df_res['count']]
         df_res['index'] = pd.Categorical(df_res['index'], order)
         return df_res.sort_values('index')
 
