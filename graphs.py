@@ -649,6 +649,7 @@ class DataAnalyzer:
                                      name=avg_line_title))
             addition = '%' if percents else ''
             num = round(overall, int(round_nums)) * 100 if percents else round(overall, int(round_nums))
+            num = round(num, int(round_nums))
             if num % 1 == 0:
                 num = int(num)
             num = str(num)

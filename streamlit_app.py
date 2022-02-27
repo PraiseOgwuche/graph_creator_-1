@@ -285,6 +285,8 @@ if uploaded_file is not None:
             if show_average:
                 average_line_x = st.selectbox('Select bar to locate the average line label', order.split(",\n"),
                                               index=len(order.split(",\n")) - 1)
+            else:
+                average_line_x = 0
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
