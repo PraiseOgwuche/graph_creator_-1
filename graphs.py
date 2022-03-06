@@ -134,7 +134,6 @@ class DataAnalyzer:
                                      textfont_size=font_size
                                      ))
         else:
-            print(self.df[columns]['Satisfied'])
             dict_nums = {col: list(self.df[columns][col]) for col in order}
             fig = go.Figure()
             col = self.df[course_col].columns[0]
