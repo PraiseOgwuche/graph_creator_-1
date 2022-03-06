@@ -71,6 +71,7 @@ st.title("Graph Creator")
 st.write("This tool will help you to create various graphs 📉")
 st.sidebar.header("Graph Parameters")
 uploaded_file = st.sidebar.file_uploader("Upload dataframe", type='csv')
+multilevel_columns = st.sidebar.checkbox("Dataframe contains multilevel columns:", value=False)
 
 if uploaded_file is not None:
     # To read file as bytes:
@@ -83,7 +84,13 @@ if uploaded_file is not None:
     string_data = stringio.read()
 
     # Can be used wherever a "file-like" object is accepted:
-    dataframe = pd.read_csv(uploaded_file)
+    if multilevel_columns:
+        dataframe = pd.read_csv(uploaded_file, header=[0, 1])
+        dataframe.columns.set_levels(dataframe.columns.levels[0].str.strip(), level=0, inplace=True)
+        dataframe.columns.set_levels(dataframe.columns.levels[1].str.strip(), level=1, inplace=True)
+    else:
+        dataframe = pd.read_csv(uploaded_file)
+        dataframe.columns = dataframe.columns.str.strip()
     st.header("Inputed Dataframe:")
     st.dataframe(dataframe)
 
@@ -112,7 +119,7 @@ if uploaded_file is not None:
                 order = st.text_area('Select the order for the options:',
                                      value=session_state.options, height=150)
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
-                                   value=True)
+                                       value=True)
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -130,15 +137,32 @@ if uploaded_file is not None:
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
     elif option == 'Group Bar Graph':
-        columns = st.sidebar.multiselect('Select columns to create graph for:', tuple(dataframe.columns))
+        if multilevel_columns:
+            course_column = st.sidebar.selectbox('Select course column to create graph for:',
+                                                 tuple(dataframe.columns.levels[0]))
+            columns = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns.levels[0]))
+        else:
+            columns = st.sidebar.multiselect('Select columns to create graph for:', tuple(dataframe.columns))
+            course_column = None
+        if not multilevel_columns:
+            remove_1_part = st.sidebar.checkbox('Remove first part of the question for options')
+            if remove_1_part:
+                remove = True
+            else:
+                remove = False
+        else:
+            remove = False
         with st.sidebar:
             save = st.checkbox('Save the order')
             if columns:
                 if not save:
-                    options = []
-                    for col in columns:
-                        options.extend(list(dataframe[col].unique())[1:])
-                    options = sorted([x for x in list(set(options)) if str(x) != 'nan'])
+                    if not multilevel_columns:
+                        options = []
+                        for col in columns:
+                            options.extend(list(dataframe[col].unique())[1:])
+                        options = sorted([x for x in list(set(options)) if str(x) != 'nan'])
+                    else:
+                        options = sorted([col.strip() for col in dataframe[columns].columns])
                     ord = check_if_order_is_known(options)
                     if ord is not None:
                         options = ord
@@ -148,21 +172,20 @@ if uploaded_file is not None:
                 else:
                     order = st.text_area('Select the order for the options:',
                                          value=session_state.options, height=150)
-            remove_1_part = st.checkbox('Remove first part of the question for options')
-            if remove_1_part:
-                remove = 1
-            else:
-                remove = 0
+
             gp = graph_params(1500, 700, 21, True, '', True)
         if columns:
             st.header('Resulting Graph')
+
             graph_for_plot = graph_creator.create_bar_graph_group(columns, width=gp.width, height=gp.height,
                                                                   font_size=gp.font_size, font=gp.font,
                                                                   order=order, x_title=gp.x_title, y_title=gp.y_title,
                                                                   title=gp.title, title_text=gp.title_text,
                                                                   w=gp.num_of_words_per_line - 1,
                                                                   legend_position=gp.legend_position,
-                                                                  transparent=gp.transparent, remove=remove)
+                                                                  transparent=gp.transparent, remove=remove,
+                                                                  multilevel_columns=multilevel_columns,
+                                                                  course_col=course_column)
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
@@ -268,7 +291,7 @@ if uploaded_file is not None:
         with st.sidebar:
             column = st.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
             data_column = st.selectbox('Select data column to create graph for:', tuple(dataframe.columns))
-            round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1)
+            round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=2)
             save = st.checkbox('Save the order')
             if not save:
                 unique_vals = [x for x in list(dataframe[column].unique()) if str(x) != 'nan']

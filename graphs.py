@@ -5,7 +5,6 @@ import plotly.graph_objects as go
 from typing import Optional, List
 import re
 import numpy as np
-import chart_studio.plotly as py
 from copy import deepcopy
 from math import isclose, sqrt
 
@@ -92,46 +91,61 @@ class DataAnalyzer:
                                width: int = 900, height: int = 550,
                                font_size: int = 20, font: str = 'Hevletica Neue',
                                legend_position: List[str] = ('top', 'left'),
-                               transparent: bool = False, remove: bool = False):
-        list_vals = [self.df.loc[0, column] for column in columns]
-        for ind, val in enumerate(list_vals):
-            if remove:
-                title_text, list_vals[ind] = re.split(' - ', list_vals[ind])
-            list_vals[ind] = list_vals[ind].replace(list_vals[ind], re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                                           r'\1<br> ',
-                                                                           list_vals[ind]))
-        fig = go.Figure()
+                               transparent: bool = False, remove: bool = False,
+                               multilevel_columns: bool = False, course_col: Optional[str] = None):
         order = order.split(',\n')
         if len(order) <= 5:
             palette = self.color_palette2
         else:
             palette = self.color_palette
-        dict_nums = {}
-        for index, response in enumerate(order):
-            list_num = []
-            for column in columns:
-                df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(
-                    normalize=True))
-                if not response in df_temp.index:
-                    list_num.append(0)
-                else:
-                    list_num.append(df_temp.loc[response, column])
-            dict_nums[response] = (index, list_num)
-        for val in range(len(list_vals)):
-            percentages = []
-            for key in dict_nums.keys():
-                percentages.append(dict_nums[key][1][val])
-            percentages = np.array(self.round_to_100(np.array(percentages) * 100)) / 100
-            for ind, key in enumerate(list(dict_nums.keys())):
-                dict_nums[key][1][val] = percentages[ind]
-        for index, response in enumerate(order):
-            fig.add_trace(go.Bar(x=list_vals,
-                                 y=dict_nums[response][1],
-                                 name=names[index] if names else response,
-                                 marker_color=palette[dict_nums[response][0]],
-                                 texttemplate='%{y}', textposition='outside',
-                                 textfont_size=font_size
-                                 ))
+        if not multilevel_columns:
+            list_vals = [self.df.loc[0, column] for column in columns]
+            for ind, val in enumerate(list_vals):
+                if remove:
+                    title_text, list_vals[ind] = re.split(' - ', list_vals[ind])
+                list_vals[ind] = list_vals[ind].replace(list_vals[ind], re.sub('(' + '\s\S*?' * int(w) + ')\s',
+                                                                               r'\1<br> ',
+                                                                               list_vals[ind]))
+            fig = go.Figure()
+            dict_nums = {}
+            for index, response in enumerate(order):
+                list_num = []
+                for column in columns:
+                    df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(
+                        normalize=True))
+                    if not response in df_temp.index:
+                        list_num.append(0)
+                    else:
+                        list_num.append(df_temp.loc[response, column])
+                dict_nums[response] = (index, list_num)
+            for val in range(len(list_vals)):
+                percentages = []
+                for key in dict_nums.keys():
+                    percentages.append(dict_nums[key][1][val])
+                percentages = np.array(self.round_to_100(np.array(percentages) * 100)) / 100
+                for ind, key in enumerate(list(dict_nums.keys())):
+                    dict_nums[key][1][val] = percentages[ind]
+            for index, response in enumerate(order):
+                fig.add_trace(go.Bar(x=list_vals,
+                                     y=dict_nums[response][1],
+                                     name=names[index] if names else response,
+                                     marker_color=palette[dict_nums[response][0]],
+                                     texttemplate='%{y}', textposition='outside',
+                                     textfont_size=font_size
+                                     ))
+        else:
+            print(self.df[columns]['Satisfied'])
+            dict_nums = {col: list(self.df[columns][col]) for col in order}
+            fig = go.Figure()
+            col = self.df[course_col].columns[0]
+            for index, response in enumerate(order):
+                fig.add_trace(go.Bar(x=list(self.df[course_col][col]),
+                                     y=dict_nums[response],
+                                     name=names[index] if names else response,
+                                     marker_color=palette[index],
+                                     texttemplate='%{y}', textposition='outside',
+                                     textfont_size=font_size
+                                     ))
         if len(legend_position) == 2:
             y_legend = 1 if legend_position[1] == 'top' else 0.5 if legend_position[1] == 'middle' else -0.3
             x_legend = 1 if legend_position[0] == 'right' else 0.5 if legend_position[0] == 'center' else -0.15
