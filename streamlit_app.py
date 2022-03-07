@@ -97,9 +97,9 @@ if uploaded_file is not None:
     option = st.sidebar.selectbox(
         'Choose graph type to plot',
         ('Bar Graph for Categorical Data', 'Bar Graph for Numeric Data', 'Group Bar Graph',
-         'Multiple-Choice Question Bar Graph',
+         'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph',
+         'Horizontal Bar Chart for NPS scores',
          'Self-Assessment Graph (requires specific data format)',
-         'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph',
          'Bar Graph with Errors', 'Stacked Bar Graph', 'Line Graph', 'Scatter Graph with Regression Line'))
     session_state = SessionState.get(name='', options='')
     graph_creator = DataAnalyzer(dataframe)
@@ -331,6 +331,43 @@ if uploaded_file is not None:
                                                              round_nums=round_nums,
                                                              average_line_x=average_line_x
                                                              )
+            st.plotly_chart(graph_for_plot)
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
+    elif option == 'Horizontal Bar Chart for NPS scores':
+        with st.sidebar:
+            column = st.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
+            data_column = st.selectbox('Select data column to create graph for:', tuple(dataframe.columns))
+            round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=2)
+            save = st.checkbox('Save the order')
+            if not save:
+                unique_vals = [x for x in list(dataframe[column].unique()) if str(x) != 'nan']
+                ord = check_if_order_is_known(unique_vals)
+                if ord is None:
+                    ord = sorted(unique_vals)
+                order = st.text_area('Select the order for the options:',
+                                     value=',\n'.join(ord), height=150)
+                session_state.options = ',\n'.join(ord)
+            else:
+                order = st.text_area('Select the order for the options:',
+                                     value=session_state.options, height=150)
+            percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
+                                   value=True)
+            gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font')
+        if column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.plot_horizontal_bar_for_nps(course_col=column, column=data_column,
+                                                             width=gp.width, height=gp.height,
+                                                             font_size=gp.font_size, font=gp.font,
+                                                             order=order,
+                                                             x_title=gp.x_title, y_title=gp.y_title,
+                                                             title=gp.title, title_text=gp.title_text,
+                                                             w=gp.num_of_words_per_line - 1, transparent=gp.transparent,
+                                                             percents=percents,
+                                                             round_nums=round_nums)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')

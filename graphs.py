@@ -94,7 +94,9 @@ class DataAnalyzer:
                                transparent: bool = False, remove: bool = False,
                                multilevel_columns: bool = False, course_col: Optional[str] = None):
         order = order.split(',\n')
-        if len(order) <= 5:
+        if len(order) <= 2:
+            palette = ['rgb(170,170,170)', 'rgb(222,46,37)']
+        elif len(order) <= 5:
             palette = self.color_palette2
         else:
             palette = self.color_palette
@@ -708,3 +710,71 @@ class DataAnalyzer:
                           plot_bgcolor='rgba(0,0,0,0)')
         fig.write_image("fig.png", height=550, width=900, scale=10)
         fig.show()
+
+    def plot_horizontal_bar_for_nps(self,
+                                    course_col: str, column: str, title: Optional[bool] = False,
+                                    title_text: Optional[str] = None,
+                                    order: Optional[str] = None,
+                                    x_title: Optional[str] = None, y_title: Optional[str] = None,
+                                    width: int = 900, height: int = 550,
+                                    font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
+                                    transparent: bool = False, percents: bool = True,
+                                    round_nums: int = 2):
+        df = deepcopy(self.df)
+        order = order.split(',\n')
+        df = df.set_index(course_col)
+        if order:
+            not_in_df = [index for index in order if index not in set(list(
+                df.index))]
+            for i in not_in_df:
+                df.loc[i, :] = [np.nan] * len(df.columns)
+            df = df.loc[order, ]
+        df = df.fillna(0).reset_index()
+        x = list(df[course_col]).copy()
+        for ind, val in enumerate(x):
+            if len(val) >= 18:
+                x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 1 + ')\s',
+                                                    r'\1<br> ', val))
+        v = self.df[column]
+        fig = go.Figure()
+        fig.add_trace(go.Bar(y=x,
+                                 x=[round(i, int(round_nums)) for i in v],
+                                 marker_color='rgb(224,44,36)',
+                                 texttemplate='%{x}%' if percents else '%{x}%',
+                                 textfont_size=font_size, orientation='h',
+                                 textposition='outside'
+                                 ))
+        fig.update_xaxes(range=[-120, 120])
+        fig.update_layout(
+            title=title_text if title else '',
+            title_font_size=font_size * 1.5,
+            font_family=font,
+            font_size=font_size,
+            xaxis=dict(
+                title=x_title if x_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size
+            ),
+            yaxis=dict(
+                title=y_title if y_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat='1%' if percents else '1'
+            ),
+            bargap=0.15,  # gap between bars of adjacent location coordinates.
+            template=self.large_rockwell_template,
+            width=width,
+            height=height,
+            barmode='relative'
+        )
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showline=False, linewidth=1, linecolor='black')
+        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
+        fig.update_xaxes(tickangle=0, automargin=True)
+        return fig
