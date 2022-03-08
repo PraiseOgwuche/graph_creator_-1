@@ -139,8 +139,14 @@ class DataAnalyzer:
             dict_nums = {col: list(self.df[columns][col]) for col in order}
             fig = go.Figure()
             col = self.df[course_col].columns[0]
+            x = list(self.df[course_col][col])
+            for ind, val in enumerate(x):
+                if len(val) >= 18:
+                    x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
+                                                        r'\1<br> ',
+                                                        val))
             for index, response in enumerate(order):
-                fig.add_trace(go.Bar(x=list(self.df[course_col][col]),
+                fig.add_trace(go.Bar(x=x,
                                      y=dict_nums[response],
                                      name=names[index] if names else response,
                                      marker_color=palette[index],
@@ -732,13 +738,11 @@ class DataAnalyzer:
         df = df.fillna(0).reset_index()
         x = list(df[course_col]).copy()
         for ind, val in enumerate(x):
-            if len(val) >= 18:
-                x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 1 + ')\s',
+            x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
                                                     r'\1<br> ', val))
         v = self.df[column]
         fig = go.Figure()
-        fig.add_trace(go.Bar(y=x,
-                                 x=[round(i, int(round_nums)) for i in v],
+        fig.add_trace(go.Bar(y=x, x=[round(i, int(round_nums)) for i in v],
                                  marker_color='rgb(224,44,36)',
                                  texttemplate='%{x}%' if percents else '%{x}%',
                                  textfont_size=font_size, orientation='h',
