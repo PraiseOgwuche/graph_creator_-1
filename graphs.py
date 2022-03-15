@@ -720,21 +720,13 @@ class DataAnalyzer:
     def plot_horizontal_bar_for_nps(self,
                                     course_col: str, column: str, title: Optional[bool] = False,
                                     title_text: Optional[str] = None,
-                                    order: Optional[str] = None,
                                     x_title: Optional[str] = None, y_title: Optional[str] = None,
                                     width: int = 900, height: int = 550,
                                     font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
                                     transparent: bool = False, percents: bool = True,
                                     round_nums: int = 2):
         df = deepcopy(self.df)
-        order = order.split(',\n')
         df = df.set_index(course_col)
-        if order:
-            not_in_df = [index for index in order if index not in set(list(
-                df.index))]
-            for i in not_in_df:
-                df.loc[i, :] = [np.nan] * len(df.columns)
-            df = df.loc[order, ]
         df = df.fillna(0).reset_index()
         x = list(df[course_col]).copy()
         for ind, val in enumerate(x):
@@ -744,7 +736,7 @@ class DataAnalyzer:
         fig = go.Figure()
         fig.add_trace(go.Bar(y=x, x=[round(i, int(round_nums)) for i in v],
                                  marker_color='rgb(224,44,36)',
-                                 texttemplate='%{x}%' if percents else '%{x}%',
+                                 texttemplate='%{x}' if percents else '%{x}%',
                                  textfont_size=font_size, orientation='h',
                                  textposition='outside'
                                  ))

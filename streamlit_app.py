@@ -339,18 +339,6 @@ if uploaded_file is not None:
             column = st.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
             data_column = st.selectbox('Select data column to create graph for:', tuple(dataframe.columns))
             round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=2)
-            save = st.checkbox('Save the order')
-            if not save:
-                unique_vals = [x for x in list(dataframe[column].unique()) if str(x) != 'nan']
-                ord = check_if_order_is_known(unique_vals)
-                if ord is None:
-                    ord = sorted(unique_vals)
-                order = st.text_area('Select the order for the options:',
-                                     value=',\n'.join(ord), height=150)
-                session_state.options = ',\n'.join(ord)
-            else:
-                order = st.text_area('Select the order for the options:',
-                                     value=session_state.options, height=150)
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
@@ -362,7 +350,6 @@ if uploaded_file is not None:
             graph_for_plot = graph_creator.plot_horizontal_bar_for_nps(course_col=column, column=data_column,
                                                              width=gp.width, height=gp.height,
                                                              font_size=gp.font_size, font=gp.font,
-                                                             order=order,
                                                              x_title=gp.x_title, y_title=gp.y_title,
                                                              title=gp.title, title_text=gp.title_text,
                                                              w=gp.num_of_words_per_line - 1, transparent=gp.transparent,
