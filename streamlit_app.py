@@ -220,31 +220,40 @@ if uploaded_file is not None:
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
 
     elif option == 'Pie Chart':
-        column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         with st.sidebar:
-            save = st.checkbox('Save the order')
-            if not save:
-                unique_vals = [x for x in list(dataframe[column].unique())[1:] if str(x) != 'nan']
-                ord = check_if_order_is_known(unique_vals)
-                if ord is None:
-                    ord = sorted(unique_vals)
-                order = st.text_area('Select the order for the options:',
-                                     value=',\n'.join(ord), height=150)
-                session_state.options = ',\n'.join(ord)
-            else:
-                order = st.text_area('Select the order for the options:',
-                                     value=session_state.options, height=150)
             what_show = st.selectbox('What to show in pie chart?', ['Percent', 'Percent and Label'], index=0)
-            gp = graph_params(900, 600, 25, True, dataframe.loc[0, column], False)
-        if column:
-            st.header('Resulting Graph')
-            graph_for_plot = graph_creator.create_pie_chart(column, width=gp.width, height=gp.height,
-                                                            font_size=gp.font_size, font=gp.font,
-                                                            x_title=gp.x_title, y_title=gp.y_title,
-                                                            title=gp.title, title_text=gp.title_text,
-                                                            what_show=what_show, legend_position=gp.legend_position,
-                                                            transparent=gp.transparent)
 
+        from_column = st.sidebar.checkbox('Calculate from column instead of using predetermined values')
+        if from_column:
+            label_column, numbers_column = None, None
+            column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
+            with st.sidebar:
+                gp = graph_params(900, 600, 25, True, dataframe.loc[0, column], False)
+
+        else:
+            column = None
+            label_column = st.sidebar.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
+            numbers_column = st.sidebar.selectbox('Select numbers column to create graph for:', tuple(dataframe.columns))
+            with st.sidebar:
+                gp = graph_params(900, 600, 25, True, dataframe.loc[0, label_column], False)
+
+        if column or label_column:
+            st.header('Resulting Graph')
+            if from_column:
+                graph_for_plot = graph_creator.create_pie_chart(column=column, width=gp.width, height=gp.height,
+                                                                font_size=gp.font_size, font=gp.font,
+                                                                x_title=gp.x_title, y_title=gp.y_title,
+                                                                title=gp.title, title_text=gp.title_text,
+                                                                what_show=what_show, legend_position=gp.legend_position,
+                                                                transparent=gp.transparent)
+            else:
+                graph_for_plot = graph_creator.create_pie_chart(label_column=label_column, numbers_column=numbers_column,
+                                                                width=gp.width, height=gp.height,
+                                                                font_size=gp.font_size, font=gp.font,
+                                                                x_title=gp.x_title, y_title=gp.y_title,
+                                                                title=gp.title, title_text=gp.title_text,
+                                                                what_show=what_show, legend_position=gp.legend_position,
+                                                                transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')

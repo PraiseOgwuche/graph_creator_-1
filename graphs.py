@@ -370,18 +370,37 @@ class DataAnalyzer:
         fig.update_xaxes(tickangle=0, automargin=True)
         return fig
 
-    def create_pie_chart(self, column: str, width: int, height: int, font_size: int,
+    def create_pie_chart(self, width: int, height: int, font_size: int,
                          font: str, title: Optional[str] = None, title_text: Optional[str] = None,
                          x_title: Optional[str] = None,
                          y_title: Optional[str] = None,
                          what_show: Optional[str] = None, legend_position: List[str] = ('top', 'left'),
-                         transparent: bool = False):
-        dictionary = dict(self.df.loc[1:, column].dropna().value_counts())
-        text_info = 'percent' if what_show == 'Percent' else 'percent+label'
-        fig = go.Figure(data=[go.Pie(labels=list(dictionary.keys()), values=list(dictionary.values()),
-                                     marker_colors=['rgb(222,46,37)', 'rgb(170,170,170)'],
-                                     textinfo=text_info)])
-
+                         transparent: bool = False, column: Optional[str] = None,
+                         label_column: Optional[str] = None, numbers_column: Optional[str] = None,
+                         ):
+        if column:
+            dictionary = dict(self.df.loc[1:, column].dropna().value_counts(normalize=True))
+            labels = list(dictionary.keys())
+            vals = np.array(self.round_to_100(np.array(list(dictionary.values())) * 100)) / 100
+        else:
+            labels = list(self.df[label_column])
+            nums = np.array(list(self.df[numbers_column])) / sum(np.array(list(self.df[numbers_column])))
+            vals = np.array(self.round_to_100(np.array(nums) * 100)) / 100
+        text_temp = '%{percent:1.0%}' if what_show == 'Percent' else 'label+percent'
+        if len(labels) <= 2:
+            palette = ['rgb(222,46,37)', 'rgb(170,170,170)']
+        elif len(labels) <= 5:
+            palette = self.color_palette2
+        else:
+            palette = self.color_palette
+        if what_show == 'Percent':
+            fig = go.Figure(data=[go.Pie(labels=labels, values=vals,
+                                         marker_colors=palette[:len(labels)],
+                                         texttemplate=text_temp)])
+        else:
+            fig = go.Figure(data=[go.Pie(labels=labels, values=vals,
+                                         marker_colors=palette[:len(labels)],
+                                         textinfo=text_temp)])
         if len(legend_position) == 2:
             y_legend = 1 if legend_position[1] == 'top' else 0.5 if legend_position[1] == 'middle' else -0.3
             x_legend = 1 if legend_position[0] == 'right' else 0.5 if legend_position[0] == 'center' else -0.15
@@ -651,7 +670,7 @@ class DataAnalyzer:
                 df.index))]
             for i in not_in_df:
                 df.loc[i, :] = [np.nan] * len(df.columns)
-            df = df.loc[order, ]
+            df = df.loc[order,]
         df = df.fillna(0).reset_index()
         x = list(df[course_col]).copy()
         for ind, val in enumerate(x):
@@ -731,15 +750,15 @@ class DataAnalyzer:
         x = list(df[course_col]).copy()
         for ind, val in enumerate(x):
             x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                    r'\1<br> ', val))
+                                                r'\1<br> ', val))
         v = self.df[column]
         fig = go.Figure()
         fig.add_trace(go.Bar(y=x, x=[round(i, int(round_nums)) for i in v],
-                                 marker_color='rgb(224,44,36)',
-                                 texttemplate='%{x}' if percents else '%{x}%',
-                                 textfont_size=font_size, orientation='h',
-                                 textposition='outside'
-                                 ))
+                             marker_color='rgb(224,44,36)',
+                             texttemplate='%{x}' if percents else '%{x}%',
+                             textfont_size=font_size, orientation='h',
+                             textposition='outside'
+                             ))
         fig.update_xaxes(range=[-120, 120])
         fig.update_layout(
             title=title_text if title else '',
