@@ -99,8 +99,8 @@ if uploaded_file is not None:
         ('Bar Graph for Categorical Data', 'Bar Graph for Numeric Data', 'Group Bar Graph',
          'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph',
          'Horizontal Bar Chart for NPS scores',
-         'Self-Assessment Graph (requires specific data format)',
-         'Bar Graph with Errors', 'Stacked Bar Graph', 'Line Graph', 'Scatter Graph with Regression Line'))
+         'Self-Assessment Graph (requires specific data format)', 'Line Graph',
+         'Bar Graph with Errors', 'Stacked Bar Graph', 'Scatter Graph with Regression Line'))
     session_state = SessionState.get(name='', options='')
     graph_creator = DataAnalyzer(dataframe)
     if option == 'Bar Graph for Categorical Data':
@@ -119,7 +119,7 @@ if uploaded_file is not None:
                 order = st.text_area('Select the order for the options:',
                                      value=session_state.options, height=150)
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
-                                       value=True)
+                                   value=True)
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -233,7 +233,8 @@ if uploaded_file is not None:
         else:
             column = None
             label_column = st.sidebar.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
-            numbers_column = st.sidebar.selectbox('Select numbers column to create graph for:', tuple(dataframe.columns))
+            numbers_column = st.sidebar.selectbox('Select numbers column to create graph for:',
+                                                  tuple(dataframe.columns))
             with st.sidebar:
                 gp = graph_params(900, 600, 25, True, dataframe.loc[0, label_column], False)
 
@@ -247,7 +248,8 @@ if uploaded_file is not None:
                                                                 what_show=what_show, legend_position=gp.legend_position,
                                                                 transparent=gp.transparent)
             else:
-                graph_for_plot = graph_creator.create_pie_chart(label_column=label_column, numbers_column=numbers_column,
+                graph_for_plot = graph_creator.create_pie_chart(label_column=label_column,
+                                                                numbers_column=numbers_column,
                                                                 width=gp.width, height=gp.height,
                                                                 font_size=gp.font_size, font=gp.font,
                                                                 x_title=gp.x_title, y_title=gp.y_title,
@@ -257,7 +259,6 @@ if uploaded_file is not None:
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
-
 
     elif option == 'Gauge Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
@@ -279,6 +280,10 @@ if uploaded_file is not None:
 
     elif option == 'Horizontal Bar Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
+        ord = ['Detractor', 'Passive', 'Promoter']
+        order = st.sidebar.text_area('Select the order for the options:',
+                             value=',\n'.join(ord), height=150)
+        session_state.options = ',\n'.join(ord)
         with st.sidebar:
             with st.expander("Graph Parameters"):
                 width = st.number_input('Width', min_value=500, max_value=3000, value=900)
@@ -291,7 +296,7 @@ if uploaded_file is not None:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.create_horizontal_bar_graph(column, width=width, height=height,
                                                                        font_size=font_size, font=font,
-                                                                       transparent=transparent)
+                                                                       transparent=transparent, order=order)
             st.plotly_chart(graph_for_plot)
             scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
@@ -357,13 +362,57 @@ if uploaded_file is not None:
         if column:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.plot_horizontal_bar_for_nps(course_col=column, column=data_column,
-                                                             width=gp.width, height=gp.height,
-                                                             font_size=gp.font_size, font=gp.font,
-                                                             x_title=gp.x_title, y_title=gp.y_title,
-                                                             title=gp.title, title_text=gp.title_text,
-                                                             w=gp.num_of_words_per_line - 1, transparent=gp.transparent,
-                                                             percents=percents,
-                                                             round_nums=round_nums)
+                                                                       width=gp.width, height=gp.height,
+                                                                       font_size=gp.font_size, font=gp.font,
+                                                                       x_title=gp.x_title, y_title=gp.y_title,
+                                                                       title=gp.title, title_text=gp.title_text,
+                                                                       w=gp.num_of_words_per_line - 1,
+                                                                       transparent=gp.transparent,
+                                                                       percents=percents,
+                                                                       round_nums=round_nums)
+            st.plotly_chart(graph_for_plot)
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
+
+    elif option == 'Self-Assessment Graph (requires specific data format)':
+        with st.sidebar:
+            time_column = st.selectbox('Select pre-post-column column to create graph for:', tuple(dataframe.columns))
+            round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=2)
+            gp = graph_params(1500, 780, 20, False, 'Learning Outcomes Self-Assessment Chart', True,
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font')
+            coordinate_of_legend_y = st.text_input('Coordinate of legend\'s y', value='-0.3')
+        if time_column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.plot_self_assessment(time_col=time_column,
+                                                                width=gp.width, height=gp.height,
+                                                                font_size=gp.font_size, font=gp.font,
+                                                                x_title=gp.x_title, y_title=gp.y_title,
+                                                                title=gp.title, title_text=gp.title_text,
+                                                                w=gp.num_of_words_per_line - 1,
+                                                                transparent=gp.transparent,
+                                                                round_nums=round_nums,
+                                                                legend_y_coord=coordinate_of_legend_y)
+            st.plotly_chart(graph_for_plot)
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
+
+    elif option == 'Line Graph':
+        with st.sidebar:
+            time_column = st.selectbox('Select pre-post-column column to create graph for:', tuple(dataframe.columns))
+            gp = graph_params(900, 550, 20, False, 'Learning Outcomes Scores Timeline', True,
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font')
+        if time_column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.plot_line(time_col=time_column,
+                                                     width=gp.width, height=gp.height,
+                                                     font_size=gp.font_size, font=gp.font,
+                                                     x_title=gp.x_title, y_title=gp.y_title,
+                                                     title=gp.title, title_text=gp.title_text,
+                                                     transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')

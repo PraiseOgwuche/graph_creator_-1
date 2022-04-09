@@ -65,7 +65,15 @@ known_orders = (
     ('Not effective at all', 'Slightly effective', 'Moderately effective', 'Very effective', 'Extremely effective'),
     ('Strongly disagree', 'Somewhat disagree',  'Moderately agree', 'Agree', 'Strongly agree'),
     ('Not effectively at all', 'Slightly effectively', 'Moderately effectively', 'Very effectively',
-     'Extremely effectively')
+     'Extremely effectively'),
+    ('Less than 30 minutes', '30 minutes to 1 hour', '1 to 2 hours', '2 to 3 hours', '4 hours or more'),
+    ('Did not improve at all', 'Improved slightly', 'Improved neither too much nor too little', 'Improved moderately',
+     'Improved a lot'),
+    ('Strongly disagree', 'Disagree',
+     'Somewhat Agree', 'Agree',
+     'Strongly Agree'),
+    ('Not effective at all', 'Slightly Effective', 'Somewhat effective', 'Effective', 'Extremely effective'),
+
 )
 
 def check_if_order_is_known(order):

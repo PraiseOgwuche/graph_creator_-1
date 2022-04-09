@@ -1,6 +1,4 @@
 import pandas as pd
-import plotly.express as px
-import plotly
 import plotly.graph_objects as go
 from typing import Optional, List
 import re
@@ -257,59 +255,72 @@ class DataAnalyzer:
                              x_title=x_title, y_title=y_title, one_color=one_color,
                              transparent=transparent)
 
-    def plot_self_assessment(self, w=2):
+    def plot_self_assessment(self, time_col: str, title: Optional[bool] = False,
+                             title_text: Optional[str] = None,
+                             x_title: Optional[str] = None, y_title: Optional[str] = None,
+                             width: int = 900, height: int = 550,
+                             font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
+                             transparent: bool = False,
+                             round_nums: int = 2, legend_y_coord: float = -0.3):
         fig = go.Figure()
         df = self.df
-        df = df.set_index('Time')
+        df = df.set_index(time_col)
         palette = self.color_pallete3
         x = list(df.columns)
         x = self.capitalize_list(x)
         for ind, val in enumerate(x):
-            if len(val) >= 18:
-                x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * w + ')\s',
-                                                    r'\1<br> ',
-                                                    val))
+            x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
+                                                r'\1<br> ',
+                                                val))
+        round_nums = int(round_nums)
         for index, response in enumerate(['Pre-semester',
                                           'Post-semester']):
+            y = [round(i, round_nums) for i in df.loc[response, :]]
             fig.add_trace(go.Bar(x=x,
-                                 y=np.array(self.round_to_100(np.array(df.loc[response, :] * 100))) / 100,
+                                 y=y,
                                  name=response,
                                  marker_color=palette[-index],
-                                 texttemplate='%{y}', textposition='outside'
+                                 text=y, textposition='outside',
+                                 textfont_size=font_size
                                  ))
         fig.update_layout(
-            font_family='Arial',
-            title='',
-            xaxis_tickfont_size=14,
+            font_family=font,
+            font_size=font_size,
+            title=title_text if title else '',
+            title_font_size=font_size * 1.5,
+            xaxis_tickfont_size=font_size,
             xaxis=dict(
-                title='',
-                titlefont_size=20,
-                tickfont_size=13,
+                title=x_title if x_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size
             ),
             yaxis=dict(
-                title='',
-                titlefont_size=20,
-                tickfont_size=12,
-                tickformat='1%'
+                title=y_title if y_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat="1"
             ),
             bargap=0.3,
-            template=self.large_rockwell_template
+            template=self.large_rockwell_template,
+            legend=dict(font_size=font_size,
+                        font_family=font,
+                        orientation='h',
+                        y=float(legend_y_coord),
+                        x=0.5,
+                        xanchor='center',
+                        yanchor='top'),
+            width=width, height=height
         )
-        fig.update_layout(legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.5,
-            xanchor="center",
-            x=0.48,
-            font=dict(size=16, color="black")
-        ))
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
-        fig.show()
-
-        fig.write_image("fig.png", height=550, width=900, scale=10)
+        return fig
 
     def plot_bar(self, x: pd.Series, y: pd.Series, width: int, height: int, font_size: int,
                  font: str, title: Optional[str] = None,
@@ -473,13 +484,14 @@ class DataAnalyzer:
 
         return fig
 
-    def create_horizontal_bar_graph(self, column: str, order: Optional[List[str]] = None,
+    def create_horizontal_bar_graph(self, column: str, order: Optional[str] = None,
                                     width: int = 900, height: int = 500,
                                     transparent: bool = False,
                                     font_size: int = 20, font: str = 'Hevletica Neue'):
+        order = order.split(',\n')
         df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(
             normalize=True))
-        df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100)))
+        df_temp[column] = self.round_to_100(np.array(df_temp[column] * 100))
         if order:
             not_in_df = [index for index in order if index not in set(list(
                 df_temp.index))]
@@ -503,7 +515,7 @@ class DataAnalyzer:
             annotations.append(dict(xref='x', yref='y',
                                     x=df_temp.loc[0, column] / 2, y=0,
                                     text=' ' + str(
-                                        df_temp.loc[0, column]) + '%' + '<br> <span style="font-size: 25px;">' +
+                                        int(df_temp.loc[0, column])) + '%' + '<br> <span style="font-size: 25px;">' +
                                          df_temp.loc[0, 'index'] + '</span>',
                                     font=dict(family=font, size=font_size,
                                               color='rgb(255, 255, 255)'),
@@ -515,7 +527,7 @@ class DataAnalyzer:
                 annotations.append(dict(xref='x', yref='y',
                                         x=space + (df_temp.loc[i, column] / 2), y=0,
                                         text=' ' + str(
-                                            df_temp.loc[i, column]) + '%' + '<br> <span style="font-size: 25px;">' +
+                                            int(df_temp.loc[i, column])) + '%' + '<br> <span style="font-size: 25px;">' +
                                              df_temp.loc[i, 'index'] + '</span>',
                                         font=dict(family=font, size=font_size,
                                                   color='rgb(255, 255, 255)'),
@@ -548,7 +560,8 @@ class DataAnalyzer:
                               y=-0.05,
                               xanchor="center",
                               x=0.48,
-                              font=dict(size=font_size / 2, color="black")
+                              font=dict(size=font_size / 2, color="black"),
+                              traceorder='normal'
                           ))
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
@@ -700,41 +713,57 @@ class DataAnalyzer:
                                yshift=10)
         return fig
 
-    def plot_line(self, time_col, list_of_cols, title, y_title, x_title):
+    def plot_line(self, time_col, title: Optional[bool] = False,
+                  title_text: Optional[str] = None,
+                  x_title: Optional[str] = None, y_title: Optional[str] = None,
+                  width: int = 900, height: int = 550,
+                  font_size: int = 20, font: str = 'Hevletica Neue',
+                  transparent: bool = False):
+
         fig = go.Figure()
-        for ind, col in enumerate(list_of_cols):
+        cols = list(self.df.columns)
+        cols.remove(time_col)
+
+        for ind, col in enumerate(cols):
             fig.add_trace(go.Scatter(y=self.df[col], x=self.df[time_col],
                                      mode='lines+text',
                                      name=col,
                                      line=dict(color=self.color_palette2[ind + 1], width=4)))
         fig.update_layout(
-            font_family='Arial',
-            font_size=16,
-            title=title if title else '',
-            xaxis_tickfont_size=16,
-            xaxis=dict(
-                title=x_title,
-                titlefont_size=16,
-                tickfont_size=16,
-                tickformat='%b, %d'
-            ),
-            yaxis=dict(
-                title=y_title,
-                titlefont_size=16,
-                tickfont_size=16
-            ),
-            template=self.large_rockwell_template,
-            legend=dict(font=dict(family="Arial", size=16)),
-            # margin=dict(l=0, r=0, b=10, pad=100)
-        )
+                    font_family=font,
+                    font_size=font_size,
+                    title=title_text if title else '',
+                    title_font_size=font_size * 1.5,
+                    xaxis_tickfont_size=font_size,
+                    xaxis=dict(
+                        title=x_title if x_title else '',
+                        titlefont_size=font_size,
+                        tickfont_size=font_size,
+                        tickformat='%b, %d'
+                    ),
+                    yaxis=dict(
+                        title=y_title if y_title else '',
+                        titlefont_size=font_size,
+                        tickfont_size=font_size,
+                        tickformat="1"
+                    ),
+                    template=self.large_rockwell_template,
+                    legend=dict(font_size=font_size,
+                                font_family=font),
+                    width=width, height=height
+                )
+
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
-        fig.update_xaxes(showgrid=False, tickangle=0, automargin=True)
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
-                          plot_bgcolor='rgba(0,0,0,0)')
-        fig.write_image("fig.png", height=550, width=900, scale=10)
-        fig.show()
+        fig.update_xaxes(tickangle=0, automargin=True)
+        return fig
 
     def plot_horizontal_bar_for_nps(self,
                                     course_col: str, column: str, title: Optional[bool] = False,
