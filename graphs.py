@@ -690,7 +690,7 @@ class DataAnalyzer:
             if len(val) >= 18:
                 x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 1 + ')\s',
                                                     r'\1<br> ', val))
-        v = self.df[column]
+        v = df[column]
         fig = self.plot_bar(x, [round(i, int(round_nums)) for i in v], width, height, font_size, font,
                             title=title_text if title else None,
                             x_title=x_title, y_title=y_title, one_color=one_color,
