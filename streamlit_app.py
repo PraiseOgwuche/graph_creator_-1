@@ -100,7 +100,7 @@ if uploaded_file is not None:
          'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph',
          'Horizontal Bar Chart for NPS scores',
          'Self-Assessment Graph (requires specific data format)', 'Line Graph',
-         'Bar Graph with Errors', 'Stacked Bar Graph', 'Scatter Graph with Regression Line'))
+         'Stacked Bar Graph', 'Scatter Graph with Regression Line', 'Bar Graph with Errors'))
     session_state = SessionState.get(name='', options='')
     graph_creator = DataAnalyzer(dataframe)
     if option == 'Bar Graph for Categorical Data':
@@ -282,7 +282,7 @@ if uploaded_file is not None:
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         ord = ['Detractor', 'Passive', 'Promoter']
         order = st.sidebar.text_area('Select the order for the options:',
-                             value=',\n'.join(ord), height=150)
+                                     value=',\n'.join(ord), height=150)
         session_state.options = ',\n'.join(ord)
         with st.sidebar:
             with st.expander("Graph Parameters"):
@@ -413,6 +413,57 @@ if uploaded_file is not None:
                                                      x_title=gp.x_title, y_title=gp.y_title,
                                                      title=gp.title, title_text=gp.title_text,
                                                      transparent=gp.transparent)
+            st.plotly_chart(graph_for_plot)
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
+
+    elif option == 'Stacked Bar Graph':
+        column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
+        first_column = st.sidebar.selectbox('Select value 1 column :', tuple(dataframe.columns))
+        second_column = st.sidebar.selectbox('Select value 2 column:', tuple(dataframe.columns))
+
+        with st.sidebar:
+            percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
+                                   value=True)
+            include_total = st.checkbox('Include total (if it is in the dataset as the last row)')
+            gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font')
+        if column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.stacked_bar_plot(column, first_column, second_column,
+                                                            width=gp.width, height=gp.height,
+                                                            font_size=gp.font_size, font=gp.font,
+                                                            x_title=gp.x_title, y_title=gp.y_title,
+                                                            title=gp.title, title_text=gp.title_text,
+                                                            transparent=gp.transparent,
+                                                            percents=percents, include_total=include_total)
+            st.plotly_chart(graph_for_plot)
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+            st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')
+
+    elif option == 'Scatter Graph with Regression Line':
+        first_column = st.sidebar.selectbox('Select value 1 column :', tuple(dataframe.columns))
+        second_column = st.sidebar.selectbox('Select value 2 column:', tuple(dataframe.columns))
+
+        with st.sidebar:
+            marker_size = st.number_input('Marker size:', 1, 40, 10, 1)
+            marker_border_width = st.number_input('Marker border width:', 1, 20, 2, 1)
+            gp = graph_params(1500, 780, 27, False, dataframe.loc[0, first_column], True,
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font')
+        if first_column and second_column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.plot_scatter_with_regression(first_column, second_column,
+                                                                        width=gp.width, height=gp.height,
+                                                                        font_size=gp.font_size, font=gp.font,
+                                                                        x_title=gp.x_title, y_title=gp.y_title,
+                                                                        title=gp.title, title_text=gp.title_text,
+                                                                        transparent=gp.transparent,
+                                                                        marker_size=marker_size,
+                                                                        marker_line_width=marker_border_width)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')

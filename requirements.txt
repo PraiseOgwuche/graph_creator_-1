@@ -5,3 +5,4 @@ numpy
 chart_studio
 pandas
 kaleido
+statsmodels

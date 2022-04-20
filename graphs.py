@@ -4,6 +4,8 @@ from typing import Optional, List
 import re
 import numpy as np
 from copy import deepcopy
+import statsmodels.api as sm
+from statsmodels.stats.outliers_influence import summary_table
 from math import isclose, sqrt
 
 pd.options.mode.chained_assignment = None
@@ -822,4 +824,165 @@ class DataAnalyzer:
         fig.update_yaxes(showline=False, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
+        return fig
+
+    def stacked_bar_plot(self, column: str, first_column: str, second_column: str,
+                         title: Optional[bool] = False, title_text: Optional[str] = None,
+                         x_title: Optional[str] = None, y_title: Optional[str] = None,
+                         width: int = 900, height: int = 550,
+                         font_size: int = 20, font: str = 'Hevletica Neue',
+                         transparent: bool = False, percents: bool = True, include_total: bool = False):
+        fig = go.Figure()
+        if include_total:
+            df = self.df
+        else:
+            df = self.df.iloc[:-1, :]
+        x = list(df[column]).copy()
+        print(x)
+        x = self.capitalize_list(x)
+        for ind, val in enumerate(x):
+            if len(val) >= 18:
+                x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 2 + ')\s',
+                                                    r'\1<br> ',
+                                                    val))
+        fv = df[first_column] * 100 if percents else df[first_column]
+        sv = df[second_column] * 100 if percents else df[second_column]
+        fig.add_trace(go.Bar(
+            name=first_column,
+            x=x, y=[round(i, 1) for i in fv],
+            marker_color=self.color_palette[-2],
+            texttemplate='%{y}%', textposition='outside', textfont_size=font_size
+        ))
+        fig.add_trace(go.Bar(
+            name=second_column,
+            x=x, y=[round(i, 1) for i in sv],
+            marker_color='rgb(232,148,60)',
+            texttemplate='%{y}%', textposition='outside', textfont_size=font_size
+        ))
+        fig.update_layout(
+
+            title=title_text if title else '',
+            title_font_size=font_size * 1.5,
+            font_family=font,
+            font_size=font_size,
+            xaxis=dict(
+                title=x_title if x_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size
+            ),
+            yaxis=dict(
+                title=y_title if y_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat='1%' if percents else '1'
+            ),
+            bargap=0.15,  # gap between bars of adjacent location coordinates.
+            template=self.large_rockwell_template,
+            width=width,
+            height=height,
+            showlegend=True
+        )
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
+        fig.update_xaxes(tickangle=0, automargin=True)
+        fig.update_layout(barmode='stack')
+        return fig
+
+    def plot_scatter_with_regression(self, first_column: str, second_column: str,
+                                     title: Optional[bool] = False, title_text: Optional[str] = None,
+                                     x_title: Optional[str] = None, y_title: Optional[str] = None,
+                                     width: int = 900, height: int = 550,
+                                     font_size: int = 20, font: str = 'Hevletica Neue',
+                                     transparent: bool = False, marker_size: int = 10, marker_line_width: int = 2):
+        df = self.df.loc[1:, :]
+        y = np.array([float(i) for i in df[first_column]])
+        x = np.array([float(i) for i in df[second_column]])
+        print(x)
+        X = sm.add_constant(x)
+        res = sm.OLS(y, X).fit()
+
+        st, data, ss2 = summary_table(res, alpha=0.05)
+        preds = pd.DataFrame.from_records(data, columns=[s.replace('\n', ' ') for s in ss2])
+        preds['displ'] = x
+        preds = preds.sort_values(by='displ')
+
+        fig = go.Figure()
+        p1 = go.Scatter(**{
+            'mode': 'markers', 'marker_line_width': marker_line_width, 'marker_size': marker_size,
+            'marker_color': 'rgb(222,46,37)',
+            'x': x,
+            'y': y,
+            'name': 'Points'
+        })
+        p2 = go.Scatter({
+            'mode': 'lines',
+            'x': preds['displ'],
+            'y': preds['Predicted Value'],
+            'name': 'Regression',
+            'line': {
+                'color': 'rgb(215,116,102)'
+            }
+        })
+        #Add a lower bound for the confidence interval, white
+        p3 = go.Scatter({
+            'mode': 'lines',
+            'x': preds['displ'],
+            'y': preds['Mean ci 95% low'],
+            'name': 'Lower 95% CI',
+            'showlegend': False,
+            'line': {
+                'color': 'white'
+            }
+        })
+        # Upper bound for the confidence band, transparent but with fill
+        p4 = go.Scatter( {
+            'type': 'scatter',
+            'mode': 'lines',
+            'x': preds['displ'],
+            'y': preds['Mean ci 95% upp'],
+            'name': '95% CI',
+            'fill': 'tonexty',
+            'line': {
+                'color': 'white'
+            },
+            'fillcolor': 'rgba(215,116,102, 0.3)'
+        })
+        fig.add_trace(p1)
+        fig.add_trace(p2)
+        fig.add_trace(p3)
+        fig.add_trace(p4)
+        fig.update_layout(
+            font_family=font,
+            title=title_text if title else '',
+            xaxis_tickfont_size=font_size,
+            xaxis=dict(
+                title=x_title,
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+            ),
+            yaxis=dict(
+                title=y_title,
+                titlefont_size=font_size,
+                tickfont_size=font_size
+            ),
+            bargap=0.25, # gap between bars of adjacent location coordinates.
+            template=dict(
+                layout=go.Layout(title_font=dict(family=font, size=font_size * 1.5))
+            ),
+            width=width,
+            height=height,
+            legend = dict(font = dict(family=font, size=font_size)))
+
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
         return fig
