@@ -62,7 +62,6 @@ class DataAnalyzer:
                          one_color: bool = True, width: int = 900, height: int = 550,
                          font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
                          transparent: bool = False, percents: bool = True):
-
         if percents:
             df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
             df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
@@ -74,12 +73,12 @@ class DataAnalyzer:
                 df_temp.index))]
             for i in not_in_df:
                 df_temp.loc[i, :] = [np.nan] * len(df_temp.columns)
-            df_temp = df_temp.loc[order,]
+            df_temp = df_temp.loc[order, ]
         df_temp = df_temp.fillna(0).reset_index()
-        x = df_temp['index']
+        x = list(df_temp['index'])
         for ind, val in enumerate(x):
             x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s', r'\1<br> ', val))
-        return self.plot_bar(x, df_temp[column], width, height, font_size, font,
+        return self.plot_bar(x, list(df_temp[column]), width, height, font_size, font,
                              title=title_text if title else None,
                              x_title=x_title, y_title=y_title, one_color=one_color,
                              transparent=transparent, percents=percents)
@@ -324,7 +323,7 @@ class DataAnalyzer:
         fig.update_xaxes(tickangle=0, automargin=True)
         return fig
 
-    def plot_bar(self, x: pd.Series, y: pd.Series, width: int, height: int, font_size: int,
+    def plot_bar(self, x: list, y: list, width: int, height: int, font_size: int,
                  font: str, title: Optional[str] = None,
                  x_title: Optional[str] = None,
                  y_title: Optional[str] = None,
@@ -355,6 +354,7 @@ class DataAnalyzer:
             font_family=font,
             font_size=font_size,
             xaxis=dict(
+                type='category',
                 title=x_title if x_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size

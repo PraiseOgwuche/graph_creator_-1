@@ -6,7 +6,7 @@ known_orders = (
     ('Less than 1 hour', '1-2 hours',
      '2-3 hours', '3-4 hours', 'More than 5 hours'),
     ('Extremely easy', 'Easy', 'Somewhat easy',
-     'Somewhat difficult','Difficult',
+     'Somewhat difficult', 'Difficult',
      'Extremely difficult'),
     ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'),
     ('Not helpful at all', 'Not helpful', 'Somewhat helpful',
