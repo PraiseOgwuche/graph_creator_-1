@@ -748,7 +748,8 @@ class DataAnalyzer:
                         title=y_title if y_title else '',
                         titlefont_size=font_size,
                         tickfont_size=font_size,
-                        tickformat="1"
+                        tickformat="1",
+                        title_standoff=width * 0.02
                     ),
                     template=self.large_rockwell_template,
                     legend=dict(font_size=font_size,
@@ -901,7 +902,7 @@ class DataAnalyzer:
                                      width: int = 900, height: int = 550,
                                      font_size: int = 20, font: str = 'Hevletica Neue',
                                      transparent: bool = False, marker_size: int = 10, marker_line_width: int = 2):
-        df = self.df.loc[1:, :]
+        df = self.df
         y = np.array([float(i) for i in df[first_column]])
         x = np.array([float(i) for i in df[second_column]])
         print(x)
@@ -961,24 +962,33 @@ class DataAnalyzer:
         fig.update_layout(
             font_family=font,
             title=title_text if title else '',
-            xaxis_tickfont_size=font_size,
             xaxis=dict(
                 title=x_title,
                 titlefont_size=font_size,
                 tickfont_size=font_size,
+                tickformat='1%',
             ),
             yaxis=dict(
                 title=y_title,
                 titlefont_size=font_size,
-                tickfont_size=font_size
+                tickfont_size=font_size,
+                tickformat='1%',
+                title_standoff=width*0.01
             ),
-            bargap=0.25, # gap between bars of adjacent location coordinates.
             template=dict(
                 layout=go.Layout(title_font=dict(family=font, size=font_size * 1.5))
             ),
             width=width,
             height=height,
-            legend = dict(font = dict(family=font, size=font_size)))
+            legend=dict(font=dict(family=font, size=font_size)),
+            margin=dict(
+                l=150,
+                r=50,
+                b=100,
+                t=100,
+                pad=4
+            ),
+        )
 
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
