@@ -1,5 +1,6 @@
 
 known_orders = (
+    ('Yes', 'No'),
     ('Strongly disagree', 'Disagree',
      'Somewhat agree', 'Agree',
      'Strongly agree'),

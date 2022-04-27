@@ -228,6 +228,20 @@ if uploaded_file is not None:
             label_column, numbers_column = None, None
             column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
             with st.sidebar:
+                save = st.checkbox('Save the order')
+                if not save:
+                    unique_vals = list(graph_creator.get_categories_from_columns(column, ',(\S)')['index'])
+                    ord = check_if_order_is_known(unique_vals)
+                    if ord is None:
+                        ord = sorted(unique_vals)
+                    order = st.text_area('Select the order for the options:',
+                                         value=',\n'.join(ord),
+                                         height=250)
+                    session_state.options = ',\n'.join(ord)
+                else:
+                    order = st.text_area('Select the order for the options:',
+                                         value=session_state.options, height=250)
+            with st.sidebar:
                 gp = graph_params(900, 600, 25, True, dataframe.loc[0, column], False)
 
         else:
@@ -235,6 +249,20 @@ if uploaded_file is not None:
             label_column = st.sidebar.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
             numbers_column = st.sidebar.selectbox('Select numbers column to create graph for:',
                                                   tuple(dataframe.columns))
+            with st.sidebar:
+                save = st.checkbox('Save the order')
+                if not save:
+                    unique_vals = list(graph_creator.get_categories_from_columns(label_column, ',(\S)')['index'])
+                    ord = check_if_order_is_known(unique_vals)
+                    if ord is None:
+                        ord = sorted(unique_vals)
+                    order = st.text_area('Select the order for the options:',
+                                         value=',\n'.join(ord),
+                                         height=250)
+                    session_state.options = ',\n'.join(ord)
+                else:
+                    order = st.text_area('Select the order for the options:',
+                                         value=session_state.options, height=250)
             with st.sidebar:
                 gp = graph_params(900, 600, 25, True, dataframe.loc[0, label_column], False)
 
@@ -246,7 +274,7 @@ if uploaded_file is not None:
                                                                 x_title=gp.x_title, y_title=gp.y_title,
                                                                 title=gp.title, title_text=gp.title_text,
                                                                 what_show=what_show, legend_position=gp.legend_position,
-                                                                transparent=gp.transparent)
+                                                                transparent=gp.transparent, order=order)
             else:
                 graph_for_plot = graph_creator.create_pie_chart(label_column=label_column,
                                                                 numbers_column=numbers_column,
@@ -255,7 +283,7 @@ if uploaded_file is not None:
                                                                 x_title=gp.x_title, y_title=gp.y_title,
                                                                 title=gp.title, title_text=gp.title_text,
                                                                 what_show=what_show, legend_position=gp.legend_position,
-                                                                transparent=gp.transparent)
+                                                                transparent=gp.transparent, order=order)
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
             st.download_button('Download Plot', graph_for_plot.to_image(scale=scale), 'image.png')

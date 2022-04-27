@@ -390,7 +390,10 @@ class DataAnalyzer:
                          what_show: Optional[str] = None, legend_position: List[str] = ('top', 'left'),
                          transparent: bool = False, column: Optional[str] = None,
                          label_column: Optional[str] = None, numbers_column: Optional[str] = None,
+                         order: Optional[str] = None
                          ):
+        order = order.split(',\n')
+        order = {key: i for i, key in enumerate(order)}
         if column:
             dictionary = dict(self.df.loc[1:, column].dropna().value_counts(normalize=True))
             labels = list(dictionary.keys())
@@ -399,6 +402,7 @@ class DataAnalyzer:
             labels = list(self.df[label_column])
             nums = np.array(list(self.df[numbers_column])) / sum(np.array(list(self.df[numbers_column])))
             vals = np.array(self.round_to_100(np.array(nums) * 100)) / 100
+        labels, vals = zip(*sorted(zip(labels, vals), key=lambda d: order[d[0]]))
         text_temp = '%{percent:1.0%}' if what_show == 'Percent' else 'label+percent'
         if len(labels) <= 2:
             palette = ['rgb(222,46,37)', 'rgb(170,170,170)']
@@ -409,11 +413,11 @@ class DataAnalyzer:
         if what_show == 'Percent':
             fig = go.Figure(data=[go.Pie(labels=labels, values=vals,
                                          marker_colors=palette[:len(labels)],
-                                         texttemplate=text_temp)])
+                                         texttemplate=text_temp, sort=False)])
         else:
             fig = go.Figure(data=[go.Pie(labels=labels, values=vals,
                                          marker_colors=palette[:len(labels)],
-                                         textinfo=text_temp)])
+                                         textinfo=text_temp, sort=False)])
         if len(legend_position) == 2:
             y_legend = 1 if legend_position[1] == 'top' else 0.5 if legend_position[1] == 'middle' else -0.3
             x_legend = 1 if legend_position[0] == 'right' else 0.5 if legend_position[0] == 'center' else -0.15
