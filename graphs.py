@@ -60,7 +60,7 @@ class DataAnalyzer:
                          order: Optional[str] = None,
                          x_title: Optional[str] = None, y_title: Optional[str] = None,
                          one_color: bool = True, width: int = 900, height: int = 550,
-                         font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
+                         font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                          transparent: bool = False, percents: bool = True):
         if percents:
             df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
@@ -76,8 +76,7 @@ class DataAnalyzer:
             df_temp = df_temp.loc[order, ]
         df_temp = df_temp.fillna(0).reset_index()
         x = list(df_temp['index'])
-        for ind, val in enumerate(x):
-            x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s', r'\1<br> ', val))
+        x = [split_string(string, max_symb) for string in x]
         return self.plot_bar(x, list(df_temp[column]), width, height, font_size, font,
                              title=title_text if title else None,
                              x_title=x_title, y_title=y_title, one_color=one_color,
@@ -85,7 +84,7 @@ class DataAnalyzer:
 
     def create_bar_graph_group(self, columns: List[str], title: Optional[bool] = False,
                                title_text: Optional[str] = None, order: str = None,
-                               x_title: Optional[str] = None, y_title: Optional[str] = None, w: int = 1,
+                               x_title: Optional[str] = None, y_title: Optional[str] = None, max_symb: int = 20,
                                names: Optional[List[str]] = None,
                                width: int = 900, height: int = 550,
                                font_size: int = 20, font: str = 'Hevletica Neue',
@@ -104,9 +103,7 @@ class DataAnalyzer:
             for ind, val in enumerate(list_vals):
                 if remove:
                     title_text, list_vals[ind] = re.split(' - ', list_vals[ind])
-                list_vals[ind] = list_vals[ind].replace(list_vals[ind], re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                                               r'\1<br> ',
-                                                                               list_vals[ind]))
+                list_vals[ind] = [split_string(string, max_symb) for string in list_vals[ind]]
             fig = go.Figure()
             dict_nums = {}
             for index, response in enumerate(order):
@@ -139,12 +136,8 @@ class DataAnalyzer:
             fig = go.Figure()
             col = self.df[course_col].columns[0]
             x = list(self.df[course_col][col])
-            for ind, val in enumerate(x):
-                if len(val) >= 18:
-                    x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                        r'\1<br> ',
-                                                        val))
-            for index, response in enumerate(order):
+            x = [split_string(string, max_symb) for string in x]
+        for index, response in enumerate(order):
                 fig.add_trace(go.Bar(x=x,
                                      y=dict_nums[response],
                                      name=names[index] if names else response,
@@ -238,18 +231,13 @@ class DataAnalyzer:
     def create_chart_for_categories(self, column: str, title: Optional[bool] = False,
                                     title_text: Optional[str] = None, order: Optional[str] = None,
                                     x_title: Optional[str] = None, y_title: Optional[str] = None,
-                                    one_color: bool = False, sep: str = ',(\S)', w=1,
+                                    one_color: bool = False, sep: str = ',(\S)', max_symb: int = 20,
                                     width: int = 900, height: int = 550,
                                     font_size: int = 20, font: str = 'Hevletica Neue',
                                     transparent: bool = False):
         order = order.split(',\n')
         df_res = self.get_categories_from_columns(column, sep, order)
-        for tag in df_res['index']:
-            if len(tag) >= 18:
-                df_res['index'] = df_res['index'].replace(tag,
-                                                          re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                                 r'\1<br> ',
-                                                                 tag))
+        df_res['index'] = [split_string(string, max_symb) for string in df_res['index']]
 
         return self.plot_bar(df_res['index'], df_res['count'], width, height, font_size, font,
                              title=title_text if title else None,
@@ -260,7 +248,7 @@ class DataAnalyzer:
                              title_text: Optional[str] = None,
                              x_title: Optional[str] = None, y_title: Optional[str] = None,
                              width: int = 900, height: int = 550,
-                             font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
+                             font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                              transparent: bool = False,
                              round_nums: int = 2, legend_y_coord: float = -0.3):
         fig = go.Figure()
@@ -269,10 +257,7 @@ class DataAnalyzer:
         palette = self.color_pallete3
         x = list(df.columns)
         x = self.capitalize_list(x)
-        for ind, val in enumerate(x):
-            x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                r'\1<br> ',
-                                                val))
+        x = [split_string(string, max_symb) for string in x]
         round_nums = int(round_nums)
         for index, response in enumerate(['Pre-semester',
                                           'Post-semester']):
@@ -577,106 +562,12 @@ class DataAnalyzer:
 
         return fig
 
-    def bar_with_errors(self):
-
-        fig = go.Figure()
-        x = list(self.df['Course']).copy()
-        x = self.capitalize_list(x)
-        for ind, val in enumerate(x):
-            if len(val) >= 18:
-                x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 2 + ')\s',
-                                                    r'\1<br> ',
-                                                    val))
-        fig.add_trace(go.Bar(
-            name='Control',
-            x=x, y=[round(i, 1) for i in self.df['Average Score']],
-            error_y=dict(type='data', color=self.color_palette[-3], array=np.array(self.df['Average Score']) * 0.1),
-            marker_color=self.color_palette[-1],
-            texttemplate='%{y}', textposition='inside',
-            insidetextanchor='middle'
-        ))
-        fig.update_layout(
-            font_family='Hevletica Neue',
-            title='Average Outcome by Course',
-            xaxis_tickfont_size=14,
-            xaxis=dict(
-                title='',
-                titlefont_size=16,
-                tickfont_size=12,
-            ),
-            yaxis=dict(
-                title='Average Outcome',
-                titlefont_size=16,
-                tickfont_size=12
-            ),
-            bargap=0.25,  # gap between bars of adjacent location coordinates.
-            template=self.large_rockwell_template
-        )
-        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
-        fig.update_xaxes(tickangle=0, automargin=True)
-        # fig.write_image("fig.png", height=550, width=900, scale=10)
-        fig.show()
-
-    def stacked_bar_plot(self, course_var, first_var, second_var, y_title, perc, title, include_total):
-        fig = go.Figure()
-        if include_total:
-            df = self.df
-        else:
-            df = self.df.iloc[:-1, :]
-        x = list(df[course_var]).copy()
-        x = self.capitalize_list(x)
-        for ind, val in enumerate(x):
-            if len(val) >= 18:
-                x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 2 + ')\s',
-                                                    r'\1<br> ',
-                                                    val))
-        fv = df[first_var] * 100 if perc else df[first_var]
-        sv = df[second_var] * 100 if perc else df[second_var]
-        fig.add_trace(go.Bar(
-            name=first_var,
-            x=x, y=[round(i, 1) for i in fv],
-            marker_color=self.color_palette[-2],
-            texttemplate='%{y}', textposition='outside', textfont_size=16
-        ))
-        fig.add_trace(go.Bar(
-            name=second_var,
-            x=x, y=[round(i, 1) for i in sv],
-            marker_color='rgb(232,148,60)',
-            texttemplate='%{y}', textposition='outside', textfont_size=16
-        ))
-        fig.update_layout(
-            font_family='Hevletica Neue',
-            title=title if title else '',
-            xaxis_tickfont_size=16,
-            xaxis=dict(
-                title='',
-                titlefont_size=16,
-                tickfont_size=16,
-            ),
-            yaxis=dict(
-                title=y_title,
-                titlefont_size=16,
-                tickfont_size=16
-            ),
-            bargap=0.25,  # gap between bars of adjacent location coordinates.
-            template=self.large_rockwell_template,
-            legend=dict(font=dict(family="Hevletica Neue", size=16)))
-        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
-        fig.update_xaxes(tickangle=0, automargin=True)
-        fig.update_layout(barmode='stack')
-        # fig.write_image("fig.png", height=550, width=900, scale=10)
-        fig.show()
-
     def create_simple_bar(self, avg_line_title: str, average_line_x: str,
                           course_col: str, column: str, title: Optional[bool] = False, title_text: Optional[str] = None,
                           order: Optional[str] = None,
                           x_title: Optional[str] = None, y_title: Optional[str] = None,
                           one_color: bool = True, width: int = 900, height: int = 550,
-                          font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
+                          font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                           transparent: bool = False, percents: bool = True,
                           inside_outside_pos: str = 'outside', show_average: bool = False,
                           round_nums: int = 2):
@@ -692,10 +583,7 @@ class DataAnalyzer:
             df = df.loc[order,]
         df = df.fillna(0).reset_index()
         x = list(df[course_col]).copy()
-        for ind, val in enumerate(x):
-            if len(val) >= 18:
-                x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 1 + ')\s',
-                                                    r'\1<br> ', val))
+        x = [split_string(string, max_symb) for string in x]
         v = df[column]
         fig = self.plot_bar(x, [round(i, int(round_nums)) for i in v], width, height, font_size, font,
                             title=title_text if title else None,
@@ -778,16 +666,14 @@ class DataAnalyzer:
                                     title_text: Optional[str] = None,
                                     x_title: Optional[str] = None, y_title: Optional[str] = None,
                                     width: int = 900, height: int = 550,
-                                    font_size: int = 20, font: str = 'Hevletica Neue', w: int = 2,
+                                    font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                                     transparent: bool = False, percents: bool = True,
                                     round_nums: int = 2):
         df = deepcopy(self.df)
         df = df.set_index(course_col)
         df = df.fillna(0).reset_index()
         x = list(df[course_col]).copy()
-        for ind, val in enumerate(x):
-            x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * int(w) + ')\s',
-                                                r'\1<br> ', val))
+        x = [split_string(string, max_symb) for string in x]
         v = self.df[column]
         fig = go.Figure()
         fig.add_trace(go.Bar(y=x, x=[round(i, int(round_nums)) for i in v],
@@ -836,33 +722,27 @@ class DataAnalyzer:
                          x_title: Optional[str] = None, y_title: Optional[str] = None,
                          width: int = 900, height: int = 550,
                          font_size: int = 20, font: str = 'Hevletica Neue',
-                         transparent: bool = False, percents: bool = True, include_total: bool = False):
+                         transparent: bool = False, percents: bool = True, include_total: bool = False,
+                         max_symb: int = 20):
         fig = go.Figure()
         if include_total:
             df = self.df
         else:
             df = self.df.iloc[:-1, :]
         x = list(df[column]).copy()
-        print(x)
         x = self.capitalize_list(x)
-        for ind, val in enumerate(x):
-            if len(val) >= 18:
-                x[ind] = x[ind].replace(val, re.sub('(' + '\s\S*?' * 2 + ')\s',
-                                                    r'\1<br> ',
-                                                    val))
-        fv = df[first_column] * 100 if percents else df[first_column]
-        sv = df[second_column] * 100 if percents else df[second_column]
+        x = [split_string(string, max_symb) for string in x]
         fig.add_trace(go.Bar(
             name=first_column,
-            x=x, y=[round(i, 1) for i in fv],
+            x=x, y=[round(i, 1) for i in df[first_column]],
             marker_color=self.color_palette[-2],
-            texttemplate='%{y}%', textposition='outside', textfont_size=font_size
+            texttemplate='%{y}', textposition='outside', textfont_size=font_size
         ))
         fig.add_trace(go.Bar(
             name=second_column,
-            x=x, y=[round(i, 1) for i in sv],
+            x=x, y=[round(i, 1) for i in df[second_column]],
             marker_color='rgb(232,148,60)',
-            texttemplate='%{y}%', textposition='outside', textfont_size=font_size
+            texttemplate='%{y}', textposition='outside', textfont_size=font_size
         ))
         fig.update_layout(
 
@@ -909,7 +789,6 @@ class DataAnalyzer:
         df = self.df
         y = np.array([float(i) for i in df[first_column]])
         x = np.array([float(i) for i in df[second_column]])
-        print(x)
         X = sm.add_constant(x)
         res = sm.OLS(y, X).fit()
 
@@ -1000,3 +879,26 @@ class DataAnalyzer:
         else:
             fig.update_layout(plot_bgcolor='rgb(255,255,255)')
         return fig
+
+
+def split_string(string, max_symb):
+    new_str_list = string.split(" ")
+    whole_str = ""
+    new_str = ""
+    end = False
+    ind = 0
+    while not end:
+        if len(new_str) + len(new_str_list[ind]) <= max_symb:
+            if new_str == "":
+                new_str += new_str_list[ind]
+            else:
+                new_str = new_str + " " + new_str_list[ind]
+            ind += 1
+            if ind == len(new_str_list):
+                whole_str += new_str + '<br>'
+                end = True
+        else:
+            whole_str += new_str + '<br>'
+            new_str = ""
+    print(new_str_list, max_symb)
+    return whole_str
