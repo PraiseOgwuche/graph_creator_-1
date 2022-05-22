@@ -397,7 +397,7 @@ if uploaded_file is not None:
     elif option == 'Self-Assessment Graph (requires specific data format)':
         with st.sidebar:
             time_column = st.selectbox('Select pre-post-column column to create graph for:', tuple(dataframe.columns))
-            round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=2)
+            round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=1)
             gp = graph_params(1500, 780, 20, False, 'Learning Outcomes Self-Assessment Chart', True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'

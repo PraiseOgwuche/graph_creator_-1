@@ -103,7 +103,7 @@ class DataAnalyzer:
             for ind, val in enumerate(list_vals):
                 if remove:
                     title_text, list_vals[ind] = re.split(' - ', list_vals[ind])
-                list_vals[ind] = [split_string(string, max_symb) for string in list_vals[ind]]
+                list_vals[ind] = split_string(list_vals[ind], max_symb)
             fig = go.Figure()
             dict_nums = {}
             for index, response in enumerate(order):
@@ -137,14 +137,14 @@ class DataAnalyzer:
             col = self.df[course_col].columns[0]
             x = list(self.df[course_col][col])
             x = [split_string(string, max_symb) for string in x]
-        for index, response in enumerate(order):
-                fig.add_trace(go.Bar(x=x,
-                                     y=dict_nums[response],
-                                     name=names[index] if names else response,
-                                     marker_color=palette[index],
-                                     texttemplate='%{y}', textposition='outside',
-                                     textfont_size=font_size
-                                     ))
+            for index, response in enumerate(order):
+                    fig.add_trace(go.Bar(x=x,
+                                         y=dict_nums[response],
+                                         name=names[index] if names else response,
+                                         marker_color=palette[index],
+                                         texttemplate='%{y}', textposition='outside',
+                                         textfont_size=font_size
+                                         ))
         if len(legend_position) == 2:
             y_legend = 1 if legend_position[1] == 'top' else 0.5 if legend_position[1] == 'middle' else -0.3
             x_legend = 1 if legend_position[0] == 'right' else 0.5 if legend_position[0] == 'center' else -0.15
@@ -900,5 +900,4 @@ def split_string(string, max_symb):
         else:
             whole_str += new_str + '<br>'
             new_str = ""
-    print(new_str_list, max_symb)
     return whole_str
