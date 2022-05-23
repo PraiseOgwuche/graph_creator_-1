@@ -16,8 +16,8 @@ result:
 'Mary'
 """
 try:
-    import streamlit.script_run_context as ReportThread
-    from streamlit.server import Server
+    from streamlit.scriptrunner.script_run_context import get_script_run_ctx
+    from streamlit.server.server import Server
 except Exception:
     # Streamlit >= 0.65.0
     import streamlit.script_run_context as ReportThread
