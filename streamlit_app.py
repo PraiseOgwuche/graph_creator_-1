@@ -45,7 +45,7 @@ def graph_params(width, height, text_size, add_legend_pos, title, w, def_text=No
         else:
             title_text = None
         if w:
-            max_symbols = st.number_input('Max symbols per line:', min_value=1, max_value=100, value=20)
+            max_symbols = st.number_input('Max symbols per line:', min_value=10, max_value=100, value=20)
         else:
             max_symbols = None
         if add_legend_pos:

@@ -887,6 +887,8 @@ def split_string(string, max_symb):
     new_str = ""
     end = False
     ind = 0
+    if len(new_str_list) == 1 and len(new_str_list[0]) > max_symb:
+        return string
     while not end:
         if len(new_str) + len(new_str_list[ind]) <= max_symb:
             if new_str == "":
