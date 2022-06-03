@@ -22,7 +22,7 @@ class DataAnalyzer:
                                    'rgb(243,210,143)',
                                    'rgb(60,54,50)', 'rgb(99,99,99)', 'rgb(153,153,153)', 'rgb(211,211,211)']))
     color_palette2 = ['rgb(151,144,139)', 'rgb(60,54,50)', 'rgb(243,210,143)',
-                      'rgb(222,46,37)', 'rgb(132,29,22)', 'rgb(252,156,124)', 'rgb(153,153,153)']
+                      'rgb(222,46,37)', 'rgb(132,29,22)', 'rgb(252,156,124)', 'rgb(153,153,153)', 'rgb(211,211,211)']
     color_pallete3 = ['rgb(153,153,153)', 'rgb(222,46,37)']
 
     def __init__(self, data: pd.DataFrame):
@@ -620,7 +620,7 @@ class DataAnalyzer:
 
         for ind, col in enumerate(cols):
             df_new = self.df.dropna(subset=col)
-            fig.add_trace(go.Scatter(y=df_new[col], x=df_new[time_col],
+            fig.add_trace(go.Scatter(y=df_new[col], x=pd.to_datetime(df_new[time_col]),
                                      mode='lines+text',
                                      name=col,
                                      line=dict(color=self.color_palette2[ind + 1], width=4)))
