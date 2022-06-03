@@ -76,7 +76,8 @@ known_orders = (
     ('Not effective at all', 'Slightly Effective', 'Somewhat effective', 'Effective', 'Extremely effective'),
     ('Strongly Disagree', 'Disagree', 'Somewhat Agree',
      'Agree', 'Strongly Agree'),
-    ('Not helpful at all', 'Barely helpful', 'Somewhat helpful', 'Helpful', 'Extremely helpful',)
+    ('Not helpful at all', 'Barely helpful', 'Somewhat helpful', 'Helpful', 'Extremely helpful'),
+    ('Extremely Dissatisfied', 'Dissatisfied', 'Somewhat satisfied', 'Satisfied', 'Extremely satisfied')
 )
 
 def check_if_order_is_known(order):
