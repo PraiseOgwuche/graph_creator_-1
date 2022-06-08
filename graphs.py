@@ -619,12 +619,18 @@ class DataAnalyzer:
         cols = list(self.df.columns)
         cols.remove(time_col)
 
+        if len(cols) > 5:
+            colors = self.color_palette
+        else:
+            colors = self.color_palette2
+
+
         for ind, col in enumerate(cols):
             df_new = self.df.dropna(subset=col)
             fig.add_trace(go.Scatter(y=df_new[col], x=pd.to_datetime(df_new[time_col]),
                                      mode='lines+text',
                                      name=col,
-                                     line=dict(color=self.color_palette[ind + 1], width=4)))
+                                     line=dict(color=colors[ind + 1], width=4)))
         fig.update_layout(
                     font_family=font,
                     font_size=font_size,
@@ -786,6 +792,45 @@ class DataAnalyzer:
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
         fig.update_layout(barmode='stack')
+        return fig
+
+    def plot_histogram(self, column: str,
+                       title: Optional[bool] = False, title_text: Optional[str] = None,
+                       x_title: Optional[str] = None, y_title: Optional[str] = None,
+                       width: int = 900, height: int = 550,
+                       font_size: int = 20, font: str = 'Hevletica Neue',
+                       transparent: bool = False):
+        fig = go.Figure(data=[go.Histogram(x=self.df[column], marker_color='rgb(222,46,37)')])
+        fig.update_layout(
+                title=title_text if title else '',
+                title_font_size=font_size * 1.5,
+                font_family=font,
+                font_size=font_size,
+                xaxis=dict(
+                    title=x_title if x_title else '',
+                    titlefont_size=font_size,
+                    tickfont_size=font_size
+                ),
+                yaxis=dict(
+                    title=y_title if y_title else '',
+                    titlefont_size=font_size,
+                    tickfont_size=font_size,
+                    tickformat='1'
+                ),
+                template=self.large_rockwell_template,
+                width=width,
+                height=height
+            )
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
+        fig.update_xaxes(tickangle=0, automargin=True)
         return fig
 
     def plot_scatter_with_regression(self, first_column: str, second_column: str,

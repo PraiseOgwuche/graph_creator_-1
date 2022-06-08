@@ -100,7 +100,7 @@ if uploaded_file is not None:
          'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph',
          'Horizontal Bar Chart for NPS scores',
          'Self-Assessment Graph (requires specific data format)', 'Line Graph',
-         'Stacked Bar Graph', 'Scatter Graph with Regression Line', 'Bar Graph with Errors'))
+         'Stacked Bar Graph', 'Scatter Graph with Regression Line', 'Histogram'))
     session_state = SessionState.get(name='', options='')
     graph_creator = DataAnalyzer(dataframe)
     if option == 'Bar Graph for Categorical Data':
@@ -482,5 +482,21 @@ if uploaded_file is not None:
                                                                         transparent=gp.transparent,
                                                                         marker_size=marker_size,
                                                                         marker_line_width=marker_border_width)
+            st.plotly_chart(graph_for_plot)
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+    elif option == 'Histogram':
+        column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
+        with st.sidebar:
+            gp = graph_params(1200, 600, 27, False, dataframe.loc[0, column], False,
+                                  'The default options for this graph is: \n'
+                                  'rectangular - 1550x820 with 29 font, \n'
+                                  'square - 1200x900 with 27 font')
+        if column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.plot_histogram(column, width=gp.width, height=gp.height,
+                                                                font_size=gp.font_size, font=gp.font,
+                                                                x_title=gp.x_title, y_title=gp.y_title,
+                                                                title=gp.title, title_text=gp.title_text,
+                                                                transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
