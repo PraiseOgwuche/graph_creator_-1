@@ -583,6 +583,7 @@ class DataAnalyzer:
             df = df.loc[order,]
         df = df.fillna(0).reset_index()
         x = list(df[course_col]).copy()
+        x_copy = x.copy()
         x = [split_string(string, max_symb) for string in x]
         v = df[column]
         fig = self.plot_bar(x, [round(i, int(round_nums)) for i in v], width, height, font_size, font,
@@ -600,8 +601,8 @@ class DataAnalyzer:
             if num % 1 == 0:
                 num = int(num)
             num = str(num)
-
-            fig.add_annotation(x=average_line_x, y=overall + overall * 0.05,
+            ind = x_copy.index(average_line_x)
+            fig.add_annotation(x=x[ind], y=overall + overall * 0.05,
                                text='Average = ' + num + addition,
                                showarrow=False,
                                yshift=10)
@@ -623,7 +624,7 @@ class DataAnalyzer:
             fig.add_trace(go.Scatter(y=df_new[col], x=pd.to_datetime(df_new[time_col]),
                                      mode='lines+text',
                                      name=col,
-                                     line=dict(color=self.color_palette2[ind + 1], width=4)))
+                                     line=dict(color=self.color_palette[ind + 1], width=4)))
         fig.update_layout(
                     font_family=font,
                     font_size=font_size,
@@ -734,13 +735,13 @@ class DataAnalyzer:
         x = [split_string(string, max_symb) for string in x]
         fig.add_trace(go.Bar(
             name=first_column,
-            x=x, y=[round(i, 1) for i in df[first_column]],
+            x=x, y=[round(i, 2) for i in df[first_column]],
             marker_color=self.color_palette[-2],
             texttemplate='%{y}', textposition='outside', textfont_size=font_size
         ))
         fig.add_trace(go.Bar(
             name=second_column,
-            x=x, y=[round(i, 1) for i in df[second_column]],
+            x=x, y=[round(i, 2) for i in df[second_column]],
             marker_color='rgb(232,148,60)',
             texttemplate='%{y}', textposition='outside', textfont_size=font_size
         ))
@@ -765,7 +766,14 @@ class DataAnalyzer:
             template=self.large_rockwell_template,
             width=width,
             height=height,
-            showlegend=True
+            showlegend=True,
+            legend=dict(font_size=font_size,
+                        font_family=font,
+                        orientation='h',
+                        y=-0.35,
+                        x=0.5,
+                        xanchor='center',
+                        yanchor='middle'),
         )
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
