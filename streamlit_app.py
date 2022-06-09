@@ -419,6 +419,18 @@ if uploaded_file is not None:
         with st.sidebar:
             time_column = st.selectbox('Select pre-post-column column to create graph for:', tuple(dataframe.columns))
             round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=1)
+            set_y_range = st.checkbox('Select to set y-axis range', value=False)
+            if set_y_range:
+                minimum = np.nanmin(dataframe.drop(time_column, axis=1).values)
+                maximum = np.nanmax(dataframe.drop(time_column, axis=1).values)
+                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                                        value=minimum)
+                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                                        value=maximum)
+
+                y_range = [y_min, y_max]
+            else:
+                y_range = None
             gp = graph_params(1500, 780, 20, False, 'Learning Outcomes Self-Assessment Chart', True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -434,7 +446,8 @@ if uploaded_file is not None:
                                                                 max_symb=gp.max_symbols,
                                                                 transparent=gp.transparent,
                                                                 round_nums=round_nums,
-                                                                legend_y_coord=coordinate_of_legend_y)
+                                                                legend_y_coord=coordinate_of_legend_y,
+                                                                y_range=y_range)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 

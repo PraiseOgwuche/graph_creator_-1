@@ -250,7 +250,7 @@ class DataAnalyzer:
                              width: int = 900, height: int = 550,
                              font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                              transparent: bool = False,
-                             round_nums: int = 2, legend_y_coord: float = -0.3):
+                             round_nums: int = 2, legend_y_coord: float = -0.3, y_range: Optional[list] = None):
         fig = go.Figure()
         df = self.df
         df = df.set_index(time_col)
@@ -269,6 +269,7 @@ class DataAnalyzer:
                                  text=y, textposition='outside',
                                  textfont_size=font_size
                                  ))
+        fig.update_yaxes(range=y_range)
         fig.update_layout(
             font_family=font,
             font_size=font_size,
