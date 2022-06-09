@@ -316,19 +316,25 @@ class DataAnalyzer:
                  transparent: bool = False,
                  percents: bool = True,
                  textposition: str = 'outside',
-                 showlegend: bool = False):
+                 showlegend: bool = False,
+                 error_y: Optional[list] = None,
+                 insidetextanchor: str = 'end'):
         fig = go.Figure()
+        error_y = dict(type='data', array=error_y)
         if one_color:
             fig.add_trace(go.Bar(x=x,
                                  y=y,
                                  marker_color='rgb(224,44,36)',
+                                 error_y=error_y,
                                  texttemplate='%{y}' if percents else '%{y}',
-                                 textfont_size=font_size, textposition=textposition
+                                 textfont_size=font_size, textposition=textposition,
+                                 insidetextanchor=insidetextanchor
                                  ))
         else:
             fig.add_trace(go.Bar(x=x,
                                  y=y,
                                  marker_color=self.color_palette[:len(x)],
+                                 error_y=error_y, insidetextanchor=insidetextanchor,
                                  texttemplate='%{y}' if percents else '%{y}', textposition=textposition,
                                  ))
 
@@ -563,14 +569,16 @@ class DataAnalyzer:
         return fig
 
     def create_simple_bar(self, avg_line_title: str, average_line_x: str,
-                          course_col: str, column: str, title: Optional[bool] = False, title_text: Optional[str] = None,
+                          course_col: str, column: str, y_range: Optional[list] = None,
+                          title: Optional[bool] = False, title_text: Optional[str] = None,
                           order: Optional[str] = None,
                           x_title: Optional[str] = None, y_title: Optional[str] = None,
                           one_color: bool = True, width: int = 900, height: int = 550,
                           font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                           transparent: bool = False, percents: bool = True,
                           inside_outside_pos: str = 'outside', show_average: bool = False,
-                          round_nums: int = 2):
+                          round_nums: int = 2, err_column: Optional[str] = None,
+                          ):
         df = deepcopy(self.df)
         overall = sum(self.df.loc[:, column]) / len(self.df.loc[:, column])
         order = order.split(',\n')
@@ -586,11 +594,19 @@ class DataAnalyzer:
         x_copy = x.copy()
         x = [split_string(string, max_symb) for string in x]
         v = df[column]
+        if err_column is not None:
+            insidetextanchor = 'middle'
+            inside_outside_pos = 'inside'
+        else:
+            insidetextanchor = 'end'
         fig = self.plot_bar(x, [round(i, int(round_nums)) for i in v], width, height, font_size, font,
                             title=title_text if title else None,
                             x_title=x_title, y_title=y_title, one_color=one_color,
+                            error_y=df[err_column] if err_column else None,
                             transparent=transparent, percents=percents, textposition=inside_outside_pos,
-                            showlegend=False)
+                            showlegend=False, insidetextanchor=insidetextanchor)
+        if y_range is not None:
+            fig.update_yaxes(range=y_range)
         if show_average:
             fig.add_trace(go.Scatter(x=x, y=[round(overall, int(round_nums))] * len(x),
                                      marker_color=self.color_palette[-1],
@@ -609,7 +625,7 @@ class DataAnalyzer:
         return fig
 
     def plot_line(self, time_col, title: Optional[bool] = False,
-                  title_text: Optional[str] = None,
+                  title_text: Optional[str] = None, y_range: Optional[list] = None,
                   x_title: Optional[str] = None, y_title: Optional[str] = None,
                   width: int = 900, height: int = 550,
                   font_size: int = 20, font: str = 'Hevletica Neue',
@@ -655,6 +671,8 @@ class DataAnalyzer:
                                 font_family=font),
                     width=width, height=height
                 )
+        if y_range is not None:
+            fig.update_yaxes(range=y_range)
 
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',

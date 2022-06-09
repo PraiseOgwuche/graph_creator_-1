@@ -1,6 +1,7 @@
 import streamlit as st
 from io import StringIO
 import pandas as pd
+import numpy as np
 from graphs import DataAnalyzer, order
 import SessionState
 from default_orders import check_if_order_is_known
@@ -347,7 +348,25 @@ if uploaded_file is not None:
             else:
                 average_line_x = 0
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
-                                   value=True)
+                                   value=False)
+            error = st.checkbox('Add error bars (requires column with errors)', value=False)
+            if error:
+                err_column = st.selectbox('Select column with errors:', tuple(dataframe.columns))
+            else:
+                err_column = None
+            set_y_range = st.checkbox('Select to set y-axis range', value=False)
+            if set_y_range:
+                minimum = min(dataframe[data_column])
+                maximum = max(dataframe[data_column])
+                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                                        value=minimum)
+                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                                        value=maximum)
+
+
+                y_range = [y_min, y_max]
+            else:
+                y_range = None
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -365,7 +384,9 @@ if uploaded_file is not None:
                                                              avg_line_title='',
                                                              inside_outside_pos=gp.inside_outside,
                                                              round_nums=round_nums,
-                                                             average_line_x=average_line_x
+                                                             average_line_x=average_line_x,
+                                                             err_column=err_column,
+                                                             y_range=y_range
                                                              )
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
@@ -420,6 +441,21 @@ if uploaded_file is not None:
     elif option == 'Line Graph':
         with st.sidebar:
             time_column = st.selectbox('Select pre-post-column column to create graph for:', tuple(dataframe.columns))
+            set_y_range = st.checkbox('Select to set y-axis range', value=False)
+
+            if set_y_range:
+                print(dataframe.drop(time_column, axis=1))
+                minimum = np.nanmin(dataframe.drop(time_column, axis=1).values)
+                maximum = np.nanmax(dataframe.drop(time_column, axis=1).values)
+                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                                        value=minimum)
+                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                                        value=maximum)
+
+
+                y_range = [y_min, y_max]
+            else:
+                y_range = None
             gp = graph_params(900, 550, 20, False, 'Learning Outcomes Scores Timeline', True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -431,7 +467,7 @@ if uploaded_file is not None:
                                                      font_size=gp.font_size, font=gp.font,
                                                      x_title=gp.x_title, y_title=gp.y_title,
                                                      title=gp.title, title_text=gp.title_text,
-                                                     transparent=gp.transparent)
+                                                     transparent=gp.transparent, y_range=y_range)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
