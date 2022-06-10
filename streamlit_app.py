@@ -363,10 +363,13 @@ if uploaded_file is not None:
                 y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
                                         value=maximum)
 
+                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                                                value=(maximum - minimum) / 10)
 
                 y_range = [y_min, y_max]
             else:
                 y_range = None
+                tick_distance = None
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -386,7 +389,7 @@ if uploaded_file is not None:
                                                              round_nums=round_nums,
                                                              average_line_x=average_line_x,
                                                              err_column=err_column,
-                                                             y_range=y_range
+                                                             y_range=y_range, tick_distance=tick_distance
                                                              )
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
@@ -427,10 +430,13 @@ if uploaded_file is not None:
                                         value=minimum)
                 y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
                                         value=maximum)
+                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                                                value=(maximum - minimum) / 10)
 
                 y_range = [y_min, y_max]
             else:
                 y_range = None
+                tick_distance = None
             gp = graph_params(1500, 780, 20, False, 'Learning Outcomes Self-Assessment Chart', True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -447,7 +453,7 @@ if uploaded_file is not None:
                                                                 transparent=gp.transparent,
                                                                 round_nums=round_nums,
                                                                 legend_y_coord=coordinate_of_legend_y,
-                                                                y_range=y_range)
+                                                                y_range=y_range, tick_distance=tick_distance)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
@@ -457,18 +463,20 @@ if uploaded_file is not None:
             set_y_range = st.checkbox('Select to set y-axis range', value=False)
 
             if set_y_range:
-                print(dataframe.drop(time_column, axis=1))
                 minimum = np.nanmin(dataframe.drop(time_column, axis=1).values)
                 maximum = np.nanmax(dataframe.drop(time_column, axis=1).values)
                 y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
                                         value=minimum)
                 y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
                                         value=maximum)
+                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                                                value=(maximum - minimum) / 10)
 
 
                 y_range = [y_min, y_max]
             else:
                 y_range = None
+                tick_distance = None
             gp = graph_params(900, 550, 20, False, 'Learning Outcomes Scores Timeline', True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -480,7 +488,8 @@ if uploaded_file is not None:
                                                      font_size=gp.font_size, font=gp.font,
                                                      x_title=gp.x_title, y_title=gp.y_title,
                                                      title=gp.title, title_text=gp.title_text,
-                                                     transparent=gp.transparent, y_range=y_range)
+                                                     transparent=gp.transparent, y_range=y_range,
+                                                     tick_distance=tick_distance)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 

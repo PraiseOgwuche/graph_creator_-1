@@ -250,7 +250,8 @@ class DataAnalyzer:
                              width: int = 900, height: int = 550,
                              font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                              transparent: bool = False,
-                             round_nums: int = 2, legend_y_coord: float = -0.3, y_range: Optional[list] = None):
+                             round_nums: int = 2, legend_y_coord: float = -0.3, tick_distance: Optional[float] = None,
+                             y_range: Optional[list] = None):
         fig = go.Figure()
         df = self.df
         df = df.set_index(time_col)
@@ -269,7 +270,10 @@ class DataAnalyzer:
                                  text=y, textposition='outside',
                                  textfont_size=font_size
                                  ))
-        fig.update_yaxes(range=y_range)
+        if y_range is not None:
+            fig.update_yaxes(range=y_range)
+        if tick_distance is not None:
+            fig.update_yaxes(dtick=tick_distance)
         fig.update_layout(
             font_family=font,
             font_size=font_size,
@@ -579,6 +583,7 @@ class DataAnalyzer:
                           transparent: bool = False, percents: bool = True,
                           inside_outside_pos: str = 'outside', show_average: bool = False,
                           round_nums: int = 2, err_column: Optional[str] = None,
+                          tick_distance: Optional[float] = None
                           ):
         df = deepcopy(self.df)
         overall = sum(self.df.loc[:, column]) / len(self.df.loc[:, column])
@@ -608,6 +613,9 @@ class DataAnalyzer:
                             showlegend=False, insidetextanchor=insidetextanchor)
         if y_range is not None:
             fig.update_yaxes(range=y_range)
+        if tick_distance is not None:
+            fig.update_yaxes(dtick=tick_distance)
+
         if show_average:
             fig.add_trace(go.Scatter(x=x, y=[round(overall, int(round_nums))] * len(x),
                                      marker_color=self.color_palette[-1],
@@ -630,7 +638,7 @@ class DataAnalyzer:
                   x_title: Optional[str] = None, y_title: Optional[str] = None,
                   width: int = 900, height: int = 550,
                   font_size: int = 20, font: str = 'Hevletica Neue',
-                  transparent: bool = False):
+                  transparent: bool = False, tick_distance: Optional[float] = None):
 
         fig = go.Figure()
         cols = list(self.df.columns)
@@ -640,7 +648,6 @@ class DataAnalyzer:
             colors = self.color_palette
         else:
             colors = self.color_palette2
-
 
         for ind, col in enumerate(cols):
             df_new = self.df.dropna(subset=col)
@@ -674,6 +681,8 @@ class DataAnalyzer:
                 )
         if y_range is not None:
             fig.update_yaxes(range=y_range)
+        if tick_distance is not None:
+            fig.update_yaxes(dtick=tick_distance)
 
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
