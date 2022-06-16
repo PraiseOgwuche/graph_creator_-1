@@ -121,6 +121,12 @@ if uploaded_file is not None:
                                      value=session_state.options, height=150)
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
+            bar_gap = st.checkbox('Select to set custom bar gap')
+            if bar_gap:
+                bar_gap = st.number_input('Bar Gap Value', step=0.1,  min_value=0., max_value=1.,
+                                          value=0.7)
+            else:
+                bar_gap = None
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -133,7 +139,7 @@ if uploaded_file is not None:
                                                             x_title=gp.x_title, y_title=gp.y_title,
                                                             title=gp.title, title_text=gp.title_text,
                                                             max_symb=gp.max_symbols, transparent=gp.transparent,
-                                                            percents=percents)
+                                                            percents=percents, bar_gap=bar_gap)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
     elif option == 'Group Bar Graph':
@@ -172,6 +178,19 @@ if uploaded_file is not None:
                 else:
                     order = st.text_area('Select the order for the options:',
                                          value=session_state.options, height=150)
+            bar_gap = st.checkbox('Select to set gap between bar groups')
+            if bar_gap:
+                bar_gap = st.number_input('Bar Gap Value', step=0.1,  min_value=0., max_value=1.,
+                                          value=0.1)
+            else:
+                bar_gap = None
+
+            bar_group_gap = st.checkbox('Select to gap between bars within each group')
+            if bar_group_gap:
+                bar_group_gap = st.number_input('Bar Group Gap Value', step=0.1,  min_value=0., max_value=1.,
+                                          value=0.1)
+            else:
+                bar_group_gap = None
 
             gp = graph_params(1500, 700, 21, True, '', True)
         if columns:
@@ -185,7 +204,8 @@ if uploaded_file is not None:
                                                                   legend_position=gp.legend_position,
                                                                   transparent=gp.transparent, remove=remove,
                                                                   multilevel_columns=multilevel_columns,
-                                                                  course_col=course_column)
+                                                                  course_col=course_column,
+                                                                  bar_gap=bar_gap, bar_group_gap=bar_group_gap)
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
     elif option == 'Multiple-Choice Question Bar Graph':
@@ -370,6 +390,13 @@ if uploaded_file is not None:
             else:
                 y_range = None
                 tick_distance = None
+
+            bar_gap = st.checkbox('Select to set custom bar gap')
+            if bar_gap:
+                bar_gap = st.number_input('Bar Gap Value', step=0.1,  min_value=0., max_value=1.,
+                                        value=0.7)
+            else:
+                bar_gap = None
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -389,7 +416,8 @@ if uploaded_file is not None:
                                                              round_nums=round_nums,
                                                              average_line_x=average_line_x,
                                                              err_column=err_column,
-                                                             y_range=y_range, tick_distance=tick_distance
+                                                             y_range=y_range, tick_distance=tick_distance,
+                                                             bar_gap=bar_gap
                                                              )
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
@@ -437,6 +465,12 @@ if uploaded_file is not None:
             else:
                 y_range = None
                 tick_distance = None
+            bar_gap = st.checkbox('Select to set custom bar gap')
+            if bar_gap:
+                bar_gap = st.number_input('Bar Gap Value', step=0.1,  min_value=0., max_value=1.,
+                                          value=0.7)
+            else:
+                bar_gap = None
             gp = graph_params(1500, 780, 20, False, 'Learning Outcomes Self-Assessment Chart', True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -453,7 +487,8 @@ if uploaded_file is not None:
                                                                 transparent=gp.transparent,
                                                                 round_nums=round_nums,
                                                                 legend_y_coord=coordinate_of_legend_y,
-                                                                y_range=y_range, tick_distance=tick_distance)
+                                                                y_range=y_range, tick_distance=tick_distance,
+                                                                bar_gap=bar_gap)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
@@ -477,6 +512,7 @@ if uploaded_file is not None:
             else:
                 y_range = None
                 tick_distance = None
+            show_average = st.checkbox('Select to show average line')
             gp = graph_params(900, 550, 20, False, 'Learning Outcomes Scores Timeline', True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -489,7 +525,7 @@ if uploaded_file is not None:
                                                      x_title=gp.x_title, y_title=gp.y_title,
                                                      title=gp.title, title_text=gp.title_text,
                                                      transparent=gp.transparent, y_range=y_range,
-                                                     tick_distance=tick_distance)
+                                                     tick_distance=tick_distance, show_average=show_average)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 

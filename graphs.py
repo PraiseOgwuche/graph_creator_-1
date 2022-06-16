@@ -61,7 +61,8 @@ class DataAnalyzer:
                          x_title: Optional[str] = None, y_title: Optional[str] = None,
                          one_color: bool = True, width: int = 900, height: int = 550,
                          font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
-                         transparent: bool = False, percents: bool = True):
+                         transparent: bool = False, percents: bool = True,
+                         bar_gap: Optional[float] = None):
         if percents:
             df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
             df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
@@ -77,10 +78,13 @@ class DataAnalyzer:
         df_temp = df_temp.fillna(0).reset_index()
         x = list(df_temp['index'])
         x = [split_string(string, max_symb) for string in x]
-        return self.plot_bar(x, list(df_temp[column]), width, height, font_size, font,
+        fig = self.plot_bar(x, list(df_temp[column]), width, height, font_size, font,
                              title=title_text if title else None,
                              x_title=x_title, y_title=y_title, one_color=one_color,
                              transparent=transparent, percents=percents)
+        if bar_gap is not None:
+            fig.update_layout(bargap=bar_gap)
+        return fig
 
     def create_bar_graph_group(self, columns: List[str], title: Optional[bool] = False,
                                title_text: Optional[str] = None, order: str = None,
@@ -90,7 +94,8 @@ class DataAnalyzer:
                                font_size: int = 20, font: str = 'Hevletica Neue',
                                legend_position: List[str] = ('top', 'left'),
                                transparent: bool = False, remove: bool = False,
-                               multilevel_columns: bool = False, course_col: Optional[str] = None):
+                               multilevel_columns: bool = False, course_col: Optional[str] = None,
+                               bar_gap: Optional[float] = None, bar_group_gap: Optional[float] = None):
         order = order.split(',\n')
         if len(order) <= 2:
             palette = ['rgb(170,170,170)', 'rgb(222,46,37)']
@@ -195,6 +200,11 @@ class DataAnalyzer:
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
+
+        if bar_gap:
+            fig.update_layout(bargap=bar_gap)
+        if bar_group_gap:
+            fig.update_layout(bargroupgap=bar_group_gap)
         return fig
 
     def get_categories_from_columns(self, column: str, sep: str,
@@ -251,7 +261,7 @@ class DataAnalyzer:
                              font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                              transparent: bool = False,
                              round_nums: int = 2, legend_y_coord: float = -0.3, tick_distance: Optional[float] = None,
-                             y_range: Optional[list] = None):
+                             y_range: Optional[list] = None, bar_gap: Optional[float] = None):
         fig = go.Figure()
         df = self.df
         df = df.set_index(time_col)
@@ -291,7 +301,7 @@ class DataAnalyzer:
                 tickfont_size=font_size,
                 tickformat="1"
             ),
-            bargap=0.3,
+            bargap=0.6,
             template=self.large_rockwell_template,
             legend=dict(font_size=font_size,
                         font_family=font,
@@ -307,6 +317,8 @@ class DataAnalyzer:
                               plot_bgcolor='rgba(0,0,0,0)')
         else:
             fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+        if bar_gap is not None:
+            fig.update_layout(bargap=bar_gap)
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
@@ -583,7 +595,8 @@ class DataAnalyzer:
                           transparent: bool = False, percents: bool = True,
                           inside_outside_pos: str = 'outside', show_average: bool = False,
                           round_nums: int = 2, err_column: Optional[str] = None,
-                          tick_distance: Optional[float] = None
+                          tick_distance: Optional[float] = None,
+                          bar_gap: Optional[float] = None
                           ):
         df = deepcopy(self.df)
         overall = sum(self.df.loc[:, column]) / len(self.df.loc[:, column])
@@ -616,6 +629,9 @@ class DataAnalyzer:
         if tick_distance is not None:
             fig.update_yaxes(dtick=tick_distance)
 
+        if bar_gap is not None:
+            fig.update_layout(bargap=bar_gap)
+
         if show_average:
             fig.add_trace(go.Scatter(x=x, y=[round(overall, int(round_nums))] * len(x),
                                      marker_color=self.color_palette[-1],
@@ -638,23 +654,38 @@ class DataAnalyzer:
                   x_title: Optional[str] = None, y_title: Optional[str] = None,
                   width: int = 900, height: int = 550,
                   font_size: int = 20, font: str = 'Hevletica Neue',
-                  transparent: bool = False, tick_distance: Optional[float] = None):
+                  transparent: bool = False, tick_distance: Optional[float] = None,
+                  show_average: bool = False):
 
         fig = go.Figure()
         cols = list(self.df.columns)
         cols.remove(time_col)
+
 
         if len(cols) > 5:
             colors = self.color_palette
         else:
             colors = self.color_palette2
 
+        index = 0
         for ind, col in enumerate(cols):
             df_new = self.df.dropna(subset=col)
             fig.add_trace(go.Scatter(y=df_new[col], x=pd.to_datetime(df_new[time_col]),
                                      mode='lines+text',
                                      name=col,
                                      line=dict(color=colors[ind + 1], width=4)))
+            index += 1
+
+        if show_average:
+            means = []
+            dates = self.df[time_col]
+            df_indexed = self.df.set_index(time_col)
+            for date in dates:
+                means.append(df_indexed.loc[date, :].mean())
+            fig.add_trace(go.Scatter(y=means, x=pd.to_datetime(self.df[time_col]),
+                                     mode='lines+text',
+                                     name='Average',
+                                     line=dict(color=colors[index + 1], width=4, dash='dash')))
         fig.update_layout(
                     font_family=font,
                     font_size=font_size,
