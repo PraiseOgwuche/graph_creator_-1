@@ -98,9 +98,9 @@ if uploaded_file is not None:
     option = st.sidebar.selectbox(
         'Choose graph type to plot',
         ('Bar Graph for Categorical Data', 'Bar Graph for Numeric Data', 'Group Bar Graph',
-         'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph',
-         'Horizontal Bar Chart for NPS scores',
-         'Self-Assessment Graph (requires specific data format)', 'Line Graph',
+         'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph for single NPS score',
+         'Horizontal Bar Chart for multiple NPS scores',
+         'Self-Assessment Graph', 'Line Graph',
          'Stacked Bar Graph', 'Scatter Graph with Regression Line', 'Histogram'))
     session_state = SessionState.get(name='', options='')
     graph_creator = DataAnalyzer(dataframe)
@@ -322,7 +322,7 @@ if uploaded_file is not None:
             st.plotly_chart(graph_for_plot)
             scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
 
-    elif option == 'Horizontal Bar Graph':
+    elif option == 'Horizontal Bar Graph for single NPS score':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         ord = ['Detractor', 'Passive', 'Promoter']
         order = st.sidebar.text_area('Select the order for the options:',
@@ -421,7 +421,7 @@ if uploaded_file is not None:
                                                              )
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
-    elif option == 'Horizontal Bar Chart for NPS scores':
+    elif option == 'Horizontal Bar Chart for multiple NPS scores':
         with st.sidebar:
             column = st.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
             data_column = st.selectbox('Select data column to create graph for:', tuple(dataframe.columns))
@@ -446,7 +446,7 @@ if uploaded_file is not None:
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
-    elif option == 'Self-Assessment Graph (requires specific data format)':
+    elif option == 'Self-Assessment Graph':
         with st.sidebar:
             time_column = st.selectbox('Select pre-post-column column to create graph for:', tuple(dataframe.columns))
             round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=1)
