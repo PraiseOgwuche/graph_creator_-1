@@ -99,7 +99,6 @@ if uploaded_file is not None:
         'Choose graph type to plot',
         ('Bar Graph for Categorical Data', 'Bar Graph for Numeric Data', 'Group Bar Graph',
          'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph for single NPS score',
-         'Horizontal Bar Chart for multiple NPS scores',
          'Self-Assessment Graph', 'Line Graph',
          'Stacked Bar Graph', 'Scatter Graph with Regression Line', 'Histogram'))
     session_state = SessionState.get(name='', options='')
@@ -192,6 +191,9 @@ if uploaded_file is not None:
             else:
                 bar_group_gap = None
 
+            percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
+                                   value=True)
+
             gp = graph_params(1500, 700, 21, True, '', True)
         if columns:
             st.header('Resulting Graph')
@@ -204,7 +206,7 @@ if uploaded_file is not None:
                                                                   legend_position=gp.legend_position,
                                                                   transparent=gp.transparent, remove=remove,
                                                                   multilevel_columns=multilevel_columns,
-                                                                  course_col=course_column,
+                                                                  course_col=course_column, percents=percents,
                                                                   bar_gap=bar_gap, bar_group_gap=bar_group_gap)
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
@@ -537,7 +539,6 @@ if uploaded_file is not None:
         with st.sidebar:
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
-            include_total = st.checkbox('Include total (if it is in the dataset as the last row)')
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -550,7 +551,7 @@ if uploaded_file is not None:
                                                             x_title=gp.x_title, y_title=gp.y_title,
                                                             title=gp.title, title_text=gp.title_text,
                                                             transparent=gp.transparent,
-                                                            percents=percents, include_total=include_total,
+                                                            percents=percents,
                                                             max_symb=gp.max_symbols)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6

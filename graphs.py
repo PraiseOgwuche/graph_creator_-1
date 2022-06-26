@@ -93,7 +93,7 @@ class DataAnalyzer:
                                width: int = 900, height: int = 550,
                                font_size: int = 20, font: str = 'Hevletica Neue',
                                legend_position: List[str] = ('top', 'left'),
-                               transparent: bool = False, remove: bool = False,
+                               transparent: bool = False, remove: bool = False, percents: bool = False,
                                multilevel_columns: bool = False, course_col: Optional[str] = None,
                                bar_gap: Optional[float] = None, bar_group_gap: Optional[float] = None):
         order = order.split(',\n')
@@ -133,7 +133,7 @@ class DataAnalyzer:
                                      y=dict_nums[response][1],
                                      name=names[index] if names else response,
                                      marker_color=palette[dict_nums[response][0]],
-                                     texttemplate='%{y}', textposition='outside',
+                                     texttemplate='%{y:.0%}' if percents else '%{y:}', textposition='outside',
                                      textfont_size=font_size
                                      ))
         else:
@@ -147,7 +147,7 @@ class DataAnalyzer:
                                          y=dict_nums[response],
                                          name=names[index] if names else response,
                                          marker_color=palette[index],
-                                         texttemplate='%{y}', textposition='outside',
+                                         texttemplate='%{y:.0%}' if percents else '%{y:}',  textposition='outside',
                                          textfont_size=font_size
                                          ))
         if len(legend_position) == 2:
@@ -178,7 +178,7 @@ class DataAnalyzer:
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat="1%"
+                tickformat='1%' if percents else '1'
             ),
             bargap=0.15,
             template=self.large_rockwell_template,
@@ -343,7 +343,7 @@ class DataAnalyzer:
                                  y=y,
                                  marker_color='rgb(224,44,36)',
                                  error_y=error_y,
-                                 texttemplate='%{y}' if percents else '%{y}',
+                                 texttemplate='%{y:.0%}' if percents else '%{y:}',
                                  textfont_size=font_size, textposition=textposition,
                                  insidetextanchor=insidetextanchor
                                  ))
@@ -352,7 +352,7 @@ class DataAnalyzer:
                                  y=y,
                                  marker_color=self.color_palette[:len(x)],
                                  error_y=error_y, insidetextanchor=insidetextanchor,
-                                 texttemplate='%{y}' if percents else '%{y}', textposition=textposition,
+                                 texttemplate='%{y:.0%}' if percents else '%{y:}', textposition=textposition,
                                  ))
 
         fig.update_layout(
@@ -788,13 +788,10 @@ class DataAnalyzer:
                          x_title: Optional[str] = None, y_title: Optional[str] = None,
                          width: int = 900, height: int = 550,
                          font_size: int = 20, font: str = 'Hevletica Neue',
-                         transparent: bool = False, percents: bool = True, include_total: bool = False,
+                         transparent: bool = False, percents: bool = True,
                          max_symb: int = 20):
         fig = go.Figure()
-        if include_total:
-            df = self.df
-        else:
-            df = self.df.iloc[:-1, :]
+        df = self.df
         x = list(df[column]).copy()
         x = self.capitalize_list(x)
         x = [split_string(string, max_symb) for string in x]
