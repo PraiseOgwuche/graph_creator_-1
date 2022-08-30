@@ -62,7 +62,8 @@ class DataAnalyzer:
                          one_color: bool = True, width: int = 900, height: int = 550,
                          font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
                          transparent: bool = False, percents: bool = True,
-                         bar_gap: Optional[float] = None):
+                         bar_gap: Optional[float] = None, y_range: Optional[list] = None,
+                         tick_distance: Optional[float] = None):
         if percents:
             df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(normalize=True))
             df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
@@ -84,6 +85,10 @@ class DataAnalyzer:
                              transparent=transparent, percents=percents)
         if bar_gap is not None:
             fig.update_layout(bargap=bar_gap)
+        if y_range is not None:
+            fig.update_yaxes(range=y_range)
+        if tick_distance is not None:
+            fig.update_yaxes(dtick=tick_distance)
         return fig
 
     def create_bar_graph_group(self, columns: List[str], title: Optional[bool] = False,
@@ -95,12 +100,14 @@ class DataAnalyzer:
                                legend_position: List[str] = ('top', 'left'),
                                transparent: bool = False, remove: bool = False, percents: bool = False,
                                multilevel_columns: bool = False, course_col: Optional[str] = None,
-                               bar_gap: Optional[float] = None, bar_group_gap: Optional[float] = None):
+                               bar_gap: Optional[float] = None, bar_group_gap: Optional[float] = None,
+                               y_range: Optional[list] = None,
+                               tick_distance: Optional[float] = None):
         order = order.split(',\n')
         if len(order) <= 2:
             palette = ['rgb(170,170,170)', 'rgb(222,46,37)']
         elif len(order) <= 5:
-            palette = self.color_palette2
+            palette = ['rgb(252,156,124)', 'rgb(132,29,22)', 'rgb(222,46,37)', 'rgb(243,210,143)']
         else:
             palette = self.color_palette
         if not multilevel_columns:
@@ -205,6 +212,11 @@ class DataAnalyzer:
             fig.update_layout(bargap=bar_gap)
         if bar_group_gap:
             fig.update_layout(bargroupgap=bar_group_gap)
+
+        if y_range is not None:
+            fig.update_yaxes(range=y_range)
+        if tick_distance is not None:
+            fig.update_yaxes(dtick=tick_distance)
         return fig
 
     def get_categories_from_columns(self, column: str, sep: str,
@@ -241,7 +253,7 @@ class DataAnalyzer:
     def create_chart_for_categories(self, column: str, title: Optional[bool] = False,
                                     title_text: Optional[str] = None, order: Optional[str] = None,
                                     x_title: Optional[str] = None, y_title: Optional[str] = None,
-                                    one_color: bool = False, sep: str = ',(\S)', max_symb: int = 20,
+                                    one_color: bool = False, sep: str = ',(\S(?:(?!,\S).)*)', max_symb: int = 20,
                                     width: int = 900, height: int = 550,
                                     font_size: int = 20, font: str = 'Hevletica Neue',
                                     transparent: bool = False):
@@ -723,6 +735,62 @@ class DataAnalyzer:
 
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
+        fig.update_xaxes(tickangle=0, automargin=True)
+        return fig
+
+    def plot_horizontal_bar_for_nps(self,
+                                    course_col: str, column: str, title: Optional[bool] = False,
+                                    title_text: Optional[str] = None,
+                                    x_title: Optional[str] = None, y_title: Optional[str] = None,
+                                    width: int = 900, height: int = 550,
+                                    font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
+                                    transparent: bool = False, percents: bool = True,
+                                    round_nums: int = 2):
+        df = deepcopy(self.df)
+        df = df.set_index(course_col)
+        df = df.fillna(0).reset_index()
+        x = list(df[course_col]).copy()
+        x = [split_string(string, max_symb) for string in x]
+        v = self.df[column]
+        fig = go.Figure()
+        fig.add_trace(go.Bar(y=x, x=[round(i, int(round_nums)) for i in v],
+                             marker_color='rgb(224,44,36)',
+                             texttemplate='%{x}' if percents else '%{x}%',
+                             textfont_size=font_size, orientation='h',
+                             textposition='outside'
+                             ))
+        fig.update_xaxes(range=[-120, 120])
+        fig.update_layout(
+            title=title_text if title else '',
+            title_font_size=font_size * 1.5,
+            font_family=font,
+            font_size=font_size,
+            xaxis=dict(
+                title=x_title if x_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size
+            ),
+            yaxis=dict(
+                title=y_title if y_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat='1%' if percents else '1'
+            ),
+            bargap=0.15,  # gap between bars of adjacent location coordinates.
+            template=self.large_rockwell_template,
+            width=width,
+            height=height,
+            barmode='relative'
+        )
+        if transparent:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
+        else:
+            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showline=False, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
         return fig

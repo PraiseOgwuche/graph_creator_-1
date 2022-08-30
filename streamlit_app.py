@@ -97,7 +97,7 @@ if uploaded_file is not None:
 
     option = st.sidebar.selectbox(
         'Choose graph type to plot',
-        ('Bar Graph for Categorical Data', 'Bar Graph for Numeric Data', 'Group Bar Graph',
+        ('Bar Graph for Categorical Data', 'Horizontal Bar Chart for NPS scores', 'Bar Graph for Numeric Data', 'Group Bar Graph',
          'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph for single NPS score',
          'Self-Assessment Graph', 'Line Graph',
          'Stacked Bar Graph', 'Scatter Graph with Regression Line', 'Histogram'))
@@ -126,6 +126,27 @@ if uploaded_file is not None:
                                           value=0.7)
             else:
                 bar_gap = None
+
+            set_y_range = st.checkbox('Select to set y-axis range', value=False)
+            if set_y_range:
+                if percents:
+                    df_temp = pd.DataFrame(dataframe.loc[1:, column].value_counts(normalize=True))
+                else:
+                    df_temp = pd.DataFrame(dataframe.loc[1:, column].value_counts())
+                minimum = df_temp[column].min()
+                maximum = df_temp[column].max()
+                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                                        value=minimum)
+                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                                        value=maximum)
+
+                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                                                value=(maximum - minimum) / 10)
+
+                y_range = [y_min, y_max]
+            else:
+                y_range = None
+                tick_distance = None
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
@@ -138,7 +159,8 @@ if uploaded_file is not None:
                                                             x_title=gp.x_title, y_title=gp.y_title,
                                                             title=gp.title, title_text=gp.title_text,
                                                             max_symb=gp.max_symbols, transparent=gp.transparent,
-                                                            percents=percents, bar_gap=bar_gap)
+                                                            percents=percents, bar_gap=bar_gap,
+                                                            y_range=y_range, tick_distance=tick_distance)
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
     elif option == 'Group Bar Graph':
@@ -193,6 +215,22 @@ if uploaded_file is not None:
 
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
+            set_y_range = st.checkbox('Select to set y-axis range', value=False)
+            if set_y_range:
+                minimum = 0.
+                maximum = 100.
+                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                                        value=minimum)
+                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                                        value=maximum)
+
+                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                                                value=(maximum - minimum) / 10)
+
+                y_range = [y_min, y_max]
+            else:
+                y_range = None
+                tick_distance = None
 
             gp = graph_params(1500, 700, 21, True, '', True)
         if columns:
@@ -207,7 +245,8 @@ if uploaded_file is not None:
                                                                   transparent=gp.transparent, remove=remove,
                                                                   multilevel_columns=multilevel_columns,
                                                                   course_col=course_column, percents=percents,
-                                                                  bar_gap=bar_gap, bar_group_gap=bar_group_gap)
+                                                                  bar_gap=bar_gap, bar_group_gap=bar_group_gap,
+                                                                  y_range=y_range, tick_distance=tick_distance)
             st.plotly_chart(graph_for_plot)
             scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
     elif option == 'Multiple-Choice Question Bar Graph':
@@ -531,6 +570,30 @@ if uploaded_file is not None:
             st.plotly_chart(graph_for_plot)
             scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
+    elif option == 'Horizontal Bar Chart for NPS scores':
+        with st.sidebar:
+            column = st.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
+            data_column = st.selectbox('Select data column to create graph for:', tuple(dataframe.columns))
+            round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=2)
+            percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
+                                       value=True)
+            gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
+                                  'The default options for this graph is: \n'
+                                  'rectangular - 1550x820 with 29 font, \n'
+                                  'square - 1200x900 with 27 font')
+        if column:
+            st.header('Resulting Graph')
+            graph_for_plot = graph_creator.plot_horizontal_bar_for_nps(course_col=column, column=data_column,
+                                                                       width=gp.width, height=gp.height,
+                                                                       font_size=gp.font_size, font=gp.font,
+                                                                       x_title=gp.x_title, y_title=gp.y_title,
+                                                                       title=gp.title, title_text=gp.title_text,
+                                                                       max_symb=gp.max_symbols,
+                                                                       transparent=gp.transparent,
+                                                                       percents=percents,
+                                                                       round_nums=round_nums)
+            st.plotly_chart(graph_for_plot)
+            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
     elif option == 'Stacked Bar Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         first_column = st.sidebar.selectbox('Select value 1 column :', tuple(dataframe.columns))
