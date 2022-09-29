@@ -220,7 +220,7 @@ class DataAnalyzer:
             fig.update_yaxes(dtick=tick_distance)
         return fig
 
-    def get_cmategories_from_coluns(self, column: str, sep: str,
+    def get_categories_from_columns(self, column: str, sep: str,
                                     order: Optional[List[str]] = None) -> pd.DataFrame:
         temp_df = self.df.copy()
         temp_df.loc[1:, column] = [re.split(sep, str(i)) for i in temp_df.loc[1:, column]]
