@@ -227,6 +227,8 @@ class DataAnalyzer:
         df_res = pd.DataFrame(columns=['count'])
         responses_num = len(temp_df.loc[1:, column])
         for index_row, tag_list in enumerate(temp_df.loc[1:, column]):
+            if type(tag_list) == str:
+                tag_list = [tag_list]
             for index_tag, tag in enumerate(tag_list):
                 if len(tag) == 1:
                     temp_df.loc[index_row + 1, column][index_tag + 1] = tag + \
