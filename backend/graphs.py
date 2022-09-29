@@ -24,6 +24,7 @@ class DataAnalyzer:
     color_palette2 = ['rgb(151,144,139)', 'rgb(60,54,50)', 'rgb(243,210,143)',
                       'rgb(222,46,37)', 'rgb(132,29,22)', 'rgb(252,156,124)', 'rgb(153,153,153)', 'rgb(211,211,211)']
     color_pallete3 = ['rgb(153,153,153)', 'rgb(222,46,37)']
+    self_assessment_color_palette = ["rgb(50, 40, 100)", "rgb(239, 65, 55)"]
 
     def __init__(self, data: pd.DataFrame):
         self.df = data
@@ -219,7 +220,7 @@ class DataAnalyzer:
             fig.update_yaxes(dtick=tick_distance)
         return fig
 
-    def get_categories_from_columns(self, column: str, sep: str,
+    def get_cmategories_from_coluns(self, column: str, sep: str,
                                     order: Optional[List[str]] = None) -> pd.DataFrame:
         temp_df = self.df.copy()
         temp_df.loc[1:, column] = [re.split(sep, str(i)) for i in temp_df.loc[1:, column]]
@@ -277,7 +278,7 @@ class DataAnalyzer:
         fig = go.Figure()
         df = self.df
         df = df.set_index(time_col)
-        palette = self.color_pallete3
+        palette = self.self_assessment_color_palette
         x = list(df.columns)
         x = self.capitalize_list(x)
         x = [split_string(string, max_symb) for string in x]
