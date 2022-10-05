@@ -175,6 +175,7 @@ class DataAnalyzer:
             font_family=font,
             font_size=font_size,
             title=title_text if title else '',
+            title_font_family=font,
             title_font_size=font_size * 1.5,
             xaxis_tickfont_size=font_size,
             xaxis=dict(
@@ -186,7 +187,8 @@ class DataAnalyzer:
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%' if percents else '1'
+                tickformat='1%' if percents else '1',
+                title_standoff=25
             ),
             bargap=0.15,
             template=self.large_rockwell_template,
@@ -303,6 +305,7 @@ class DataAnalyzer:
             font_family=font,
             font_size=font_size,
             title=title_text if title else '',
+            title_font_family=font,
             title_font_size=font_size * 1.5,
             xaxis_tickfont_size=font_size,
             xaxis=dict(
@@ -314,7 +317,8 @@ class DataAnalyzer:
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat="1"
+                tickformat="1",
+                title_standoff=25
             ),
             bargap=0.6,
             template=self.large_rockwell_template,
@@ -373,6 +377,7 @@ class DataAnalyzer:
         fig.update_layout(
 
             title=title,
+            title_font_family=font,
             title_font_size=font_size * 1.5,
             font_family=font,
             font_size=font_size,
@@ -380,13 +385,15 @@ class DataAnalyzer:
                 type='category',
                 title=x_title if x_title else '',
                 titlefont_size=font_size,
-                tickfont_size=font_size
+                tickfont_size=font_size,
+
             ),
             yaxis=dict(
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%' if percents else '1'
+                tickformat='1%' if percents else '1',
+                title_standoff=25
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
@@ -455,6 +462,7 @@ class DataAnalyzer:
             y_anchor = legend_position[3]
         fig.update_layout(
             title=title_text if title else '',
+            title_font_family=font,
             title_font_size=font_size * 1.5,
             font_family=font,
             font_size=font_size,
@@ -467,7 +475,8 @@ class DataAnalyzer:
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%'
+                tickformat='1%',
+                title_standoff=25
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
@@ -705,6 +714,7 @@ class DataAnalyzer:
                     font_family=font,
                     font_size=font_size,
                     title=title_text if title else '',
+                    title_font_family=font,
                     title_font_size=font_size * 1.5,
                     xaxis_tickfont_size=font_size,
                     xaxis=dict(
@@ -766,6 +776,7 @@ class DataAnalyzer:
         fig.update_xaxes(range=[-120, 120])
         fig.update_layout(
             title=title_text if title else '',
+            title_font_family=font,
             title_font_size=font_size * 1.5,
             font_family=font,
             font_size=font_size,
@@ -778,7 +789,8 @@ class DataAnalyzer:
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%' if percents else '1'
+                tickformat='1%' if percents else '1',
+                title_standoff=25
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
@@ -822,6 +834,7 @@ class DataAnalyzer:
         fig.update_xaxes(range=[-120, 120])
         fig.update_layout(
             title=title_text if title else '',
+            title_font_family=font,
             title_font_size=font_size * 1.5,
             font_family=font,
             font_size=font_size,
@@ -834,7 +847,8 @@ class DataAnalyzer:
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%' if percents else '1'
+                tickformat='1%' if percents else '1',
+                title_standoff=25
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
@@ -881,6 +895,7 @@ class DataAnalyzer:
         fig.update_layout(
 
             title=title_text if title else '',
+            title_font_family=font,
             title_font_size=font_size * 1.5,
             font_family=font,
             font_size=font_size,
@@ -893,7 +908,8 @@ class DataAnalyzer:
                 title=y_title if y_title else '',
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%' if percents else '1'
+                tickformat='1%' if percents else '1',
+                title_standoff=25
             ),
             bargap=0.15,  # gap between bars of adjacent location coordinates.
             template=self.large_rockwell_template,
@@ -930,6 +946,7 @@ class DataAnalyzer:
         fig = go.Figure(data=[go.Histogram(x=self.df[column], marker_color='rgb(222,46,37)')])
         fig.update_layout(
                 title=title_text if title else '',
+                title_font_family=font,
                 title_font_size=font_size * 1.5,
                 font_family=font,
                 font_size=font_size,
@@ -942,7 +959,8 @@ class DataAnalyzer:
                     title=y_title if y_title else '',
                     titlefont_size=font_size,
                     tickfont_size=font_size,
-                    tickformat='1'
+                    tickformat='1',
+                    title_standoff=25
                 ),
                 template=self.large_rockwell_template,
                 width=width,
@@ -1025,6 +1043,7 @@ class DataAnalyzer:
         fig.update_layout(
             font_family=font,
             title=title_text if title else '',
+            title_font_family=font,
             xaxis=dict(
                 title=x_title,
                 titlefont_size=font_size,
