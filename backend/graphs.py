@@ -19,7 +19,7 @@ class DataAnalyzer:
     )
     color_2 = ["#ef4137", "#322864"]
     color_4 = ["#853565", "#f0a81b", "#5b3e97", "#ef4137"]
-    color_5 = ["#ef4137", "#f0a81b", "#a7427e", "#f47622", "#da1c4f"]
+    color_5 = ["#a03068", "#da1c4f", "#ef4137", "#f47622", "#f0a81b"]
     color_6 = ["#f0a81b", "a7427e", "#da1c4f", "#85b941", "#19a6b4", "#322864"]
     color_8 = ["#7d66ad", "#322864", "#ef4137", "#da1c4f", "#e4d52e", "#85b941", "#4bbfad", "#117891"]
     color_10 = ["#a7427e", "#5b3e97", "#efb91c", "#ef4137", "#da1c4f", "#e4d52e", "#85b941", "#34ab7c",
@@ -30,7 +30,7 @@ class DataAnalyzer:
 
     def get_palette(self, length: int):
         if length == 1:
-            return ['rgb(153,153,153)']
+            return ["#ef4137"]
         elif length == 2:
             return self.color_2
         elif length in [3, 4]:

@@ -424,7 +424,7 @@ if uploaded_file is not None:
                                         value=maximum)
 
                 tick_distance = st.number_input('tick distance', step=0.01, min_value=0.01, max_value=1000.,
-                                                value=(maximum - minimum) / 10)
+                                                value=(maximum - minimum) / 3)
 
                 y_range = [y_min, y_max]
             else:

@@ -70,6 +70,8 @@ known_orders = (
     ('Strongly disagree', 'Somewhat disagree',  'Moderately agree', 'Agree', 'Strongly agree'),
     ('Not effectively at all', 'Slightly effectively', 'Moderately effectively', 'Very effectively',
      'Extremely effectively'),
+    ('Extremely dissatisfied', 'Dissatisfied', 'Neutral', 'Satisfied', 'Extremely satisfied'),
+    ('Extremely ineffective', 'Ineffective', 'Neutral', 'Effective', 'Extremely effective'),
     ('Less than 30 minutes', '30 minutes to 1 hour', '1 to 2 hours', '2 to 3 hours', '4 hours or more'),
     ('Did not improve at all', 'Improved slightly', 'Improved neither too much nor too little', 'Improved moderately',
      'Improved a lot'),
