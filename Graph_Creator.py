@@ -126,6 +126,8 @@ if uploaded_file is not None:
             else:
                 bar_gap = None
 
+            one_color = st.checkbox('Select to have graph with one color of bars', value=True)
+
             set_y_range = st.checkbox('Select to set y-axis range', value=False)
             if set_y_range:
                 if percents:
@@ -134,6 +136,7 @@ if uploaded_file is not None:
                     df_temp = pd.DataFrame(dataframe.loc[1:, column].value_counts())
                 minimum = df_temp[column].min()
                 maximum = df_temp[column].max()
+
                 y_min = st.number_input('min', step=1., min_value=minimum * -5, max_value=maximum,
                                         value=minimum)
                 y_max = st.number_input('max', step=1., min_value=minimum, max_value=maximum * 5,
@@ -154,7 +157,7 @@ if uploaded_file is not None:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.create_bar_graph(column, width=gp.width, height=gp.height,
                                                             font_size=gp.font_size, font=gp.font,
-                                                            order=order, one_color=True,
+                                                            order=order, one_color=one_color,
                                                             x_title=gp.x_title, y_title=gp.y_title,
                                                             title=gp.title, title_text=gp.title_text,
                                                             max_symb=gp.max_symbols, transparent=gp.transparent,
@@ -264,6 +267,7 @@ if uploaded_file is not None:
             else:
                 order = st.text_area('Select the order for the options:',
                                      value=st.session_state.options, height=250)
+
             gp = graph_params(900, 600, 20, False, dataframe.loc[0, column], True)
         if column:
             st.header('Resulting Graph')

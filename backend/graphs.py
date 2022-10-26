@@ -17,17 +17,32 @@ class DataAnalyzer:
     large_rockwell_template = dict(
         layout=go.Layout(title_font=dict(family="Hevletica", size=24))
     )
-    color_palette = list(reversed(['rgb(132,29,22)', 'rgb(179,39,39)', 'rgb(222,46,37)', 'rgb(244,81,28)',
-                                   'rgb(215,116,102)', 'rgb(252,156,124)',
-                                   'rgb(243,210,143)',
-                                   'rgb(60,54,50)', 'rgb(99,99,99)', 'rgb(153,153,153)', 'rgb(211,211,211)']))
-    color_palette2 = ['rgb(151,144,139)', 'rgb(60,54,50)', 'rgb(243,210,143)',
-                      'rgb(222,46,37)', 'rgb(132,29,22)', 'rgb(252,156,124)', 'rgb(153,153,153)', 'rgb(211,211,211)']
-    color_pallete3 = ['rgb(153,153,153)', 'rgb(222,46,37)']
-    self_assessment_color_palette = ["rgb(50, 40, 100)", "rgb(239, 65, 55)"]
+    color_2 = ["#ef4137", "#322864"]
+    color_4 = ["#853565", "#f0a81b", "#5b3e97", "#ef4137"]
+    color_5 = ["#ef4137", "#f0a81b", "#a7427e", "#f47622", "#da1c4f"]
+    color_6 = ["#f0a81b", "a7427e", "#da1c4f", "#85b941", "#19a6b4", "#322864"]
+    color_8 = ["#7d66ad", "#322864", "#ef4137", "#da1c4f", "#e4d52e", "#85b941", "#4bbfad", "#117891"]
+    color_10 = ["#a7427e", "#5b3e97", "#efb91c", "#ef4137", "#da1c4f", "#e4d52e", "#85b941", "#34ab7c",
+                "#19a6b4", "#322864"]
 
     def __init__(self, data: pd.DataFrame):
         self.df = data
+
+    def get_palette(self, length: int):
+        if length == 1:
+            return ['rgb(153,153,153)']
+        elif length == 2:
+            return self.color_2
+        elif length in [3, 4]:
+            return self.color_4[:length]
+        elif length == 5:
+            return self.color_5
+        elif length == 6:
+            return self.color_6
+        elif length in [7, 8]:
+            return self.color_8[:length]
+        elif length in [9, 10]:
+            return self.color_10[:length]
 
     @staticmethod
     def read_data(data: str) -> pd.DataFrame:
@@ -37,14 +52,16 @@ class DataAnalyzer:
     def show_data(self) -> pd.DataFrame:
         return self.df
 
-    def capitalize_list(self, l):
-        return [i.capitalize() for i in l]
+    @staticmethod
+    def capitalize_list(list_name):
+        return [i.capitalize() for i in list_name]
 
-    def error_gen(self, actual: float, rounded: float):
+    @staticmethod
+    def error_gen(actual: float, rounded: float):
         divisor = sqrt(1.0 if actual < 1.0 else actual)
         return abs(rounded - actual) ** 2 / divisor
 
-    def round_to_100(self, percents: List[float]):
+    def round_to_100(self, percents: np.ndarray):
         if not isclose(sum(percents), 100):
             raise ValueError
         n = len(percents)
@@ -70,20 +87,20 @@ class DataAnalyzer:
             df_temp[column] = np.array(self.round_to_100(np.array(df_temp[column] * 100))) / 100
         else:
             df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts())
-        order = order.split(',\n')
-        if order:
-            not_in_df = [index for index in order if index not in set(list(
+        new_order = order.split(',\n')
+        if new_order:
+            not_in_df = [index for index in new_order if index not in set(list(
                 df_temp.index))]
             for i in not_in_df:
                 df_temp.loc[i, :] = [np.nan] * len(df_temp.columns)
-            df_temp = df_temp.loc[order, ]
+            df_temp = df_temp.loc[new_order,]
         df_temp = df_temp.fillna(0).reset_index()
         x = list(df_temp['index'])
         x = [split_string(string, max_symb) for string in x]
         fig = self.plot_bar(x, list(df_temp[column]), width, height, font_size, font,
-                             title=title_text if title else None,
-                             x_title=x_title, y_title=y_title, one_color=one_color,
-                             transparent=transparent, percents=percents)
+                            title=title_text if title else None,
+                            x_title=x_title, y_title=y_title, one_color=one_color,
+                            transparent=transparent, percents=percents)
         if bar_gap is not None:
             fig.update_layout(bargap=bar_gap)
         if y_range is not None:
@@ -104,13 +121,8 @@ class DataAnalyzer:
                                bar_gap: Optional[float] = None, bar_group_gap: Optional[float] = None,
                                y_range: Optional[list] = None,
                                tick_distance: Optional[float] = None):
-        order = order.split(',\n')
-        if len(order) <= 2:
-            palette = ['rgb(170,170,170)', 'rgb(222,46,37)']
-        elif len(order) <= 5:
-            palette = ['rgb(252,156,124)', 'rgb(132,29,22)', 'rgb(222,46,37)', 'rgb(243,210,143)']
-        else:
-            palette = self.color_palette
+        new_order = order.split(',\n')
+        palette = self.get_palette(len(new_order))
         if not multilevel_columns:
             list_vals = [self.df.loc[0, column] for column in columns]
             for ind, val in enumerate(list_vals):
@@ -119,12 +131,12 @@ class DataAnalyzer:
                 list_vals[ind] = split_string(list_vals[ind], max_symb)
             fig = go.Figure()
             dict_nums = {}
-            for index, response in enumerate(order):
+            for index, response in enumerate(new_order):
                 list_num = []
                 for column in columns:
                     df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(
                         normalize=True))
-                    if not response in df_temp.index:
+                    if response not in df_temp.index:
                         list_num.append(0)
                     else:
                         list_num.append(df_temp.loc[response, column])
@@ -136,7 +148,7 @@ class DataAnalyzer:
                 percentages = np.array(self.round_to_100(np.array(percentages) * 100)) / 100
                 for ind, key in enumerate(list(dict_nums.keys())):
                     dict_nums[key][1][val] = percentages[ind]
-            for index, response in enumerate(order):
+            for index, response in enumerate(new_order):
                 fig.add_trace(go.Bar(x=list_vals,
                                      y=dict_nums[response][1],
                                      name=names[index] if names else response,
@@ -145,19 +157,19 @@ class DataAnalyzer:
                                      textfont_size=font_size
                                      ))
         else:
-            dict_nums = {col: list(self.df[columns][col]) for col in order}
+            dict_nums = {col: list(self.df[columns][col]) for col in new_order}
             fig = go.Figure()
             col = self.df[course_col].columns[0]
             x = list(self.df[course_col][col])
             x = [split_string(string, max_symb) for string in x]
-            for index, response in enumerate(order):
-                    fig.add_trace(go.Bar(x=x,
-                                         y=dict_nums[response],
-                                         name=names[index] if names else response,
-                                         marker_color=palette[index],
-                                         texttemplate='%{y:.0%}' if percents else '%{y:}',  textposition='outside',
-                                         textfont_size=font_size
-                                         ))
+            for index, response in enumerate(new_order):
+                fig.add_trace(go.Bar(x=x,
+                                     y=dict_nums[response],
+                                     name=names[index] if names else response,
+                                     marker_color=palette[index],
+                                     texttemplate='%{y:.0%}' if percents else '%{y:}', textposition='outside',
+                                     textfont_size=font_size
+                                     ))
         if len(legend_position) == 2:
             y_legend = 1 if legend_position[1] == 'top' else 0.5 if legend_position[1] == 'middle' else -0.3
             x_legend = 1 if legend_position[0] == 'right' else 0.5 if legend_position[0] == 'center' else -0.15
@@ -246,7 +258,7 @@ class DataAnalyzer:
                     df_res.loc[tag, 'count'] = 1
         if order:
             for string in order:
-                if not string in df_res.index:
+                if string not in df_res.index:
                     df_res.loc[string, 'count'] = 0
         df_res = df_res.reset_index()
         df_res = df_res[df_res['index'] != 'nan']
@@ -262,8 +274,8 @@ class DataAnalyzer:
                                     width: int = 900, height: int = 550,
                                     font_size: int = 20, font: str = 'Hevletica Neue',
                                     transparent: bool = False):
-        order = order.split(',\n')
-        df_res = self.get_categories_from_columns(column, sep, order)
+        new_order = order.split(',\n')
+        df_res = self.get_categories_from_columns(column, sep, new_order)
         df_res['index'] = [split_string(string, max_symb) for string in df_res['index']]
 
         return self.plot_bar(df_res['index'], df_res['count'], width, height, font_size, font,
@@ -282,7 +294,7 @@ class DataAnalyzer:
         fig = go.Figure()
         df = self.df
         df = df.set_index(time_col)
-        palette = self.self_assessment_color_palette
+        palette = self.get_palette(2)
         x = list(df.columns)
         x = self.capitalize_list(x)
         x = [split_string(string, max_symb) for string in x]
@@ -369,7 +381,7 @@ class DataAnalyzer:
         else:
             fig.add_trace(go.Bar(x=x,
                                  y=y,
-                                 marker_color=self.color_palette[:len(x)],
+                                 marker_color=self.get_palette(len(x)),
                                  error_y=error_y, insidetextanchor=insidetextanchor,
                                  texttemplate='%{y:.0%}' if percents else '%{y:}', textposition=textposition,
                                  ))
@@ -422,8 +434,8 @@ class DataAnalyzer:
                          label_column: Optional[str] = None, numbers_column: Optional[str] = None,
                          order: Optional[str] = None
                          ):
-        order = order.split(',\n')
-        order = {key: i for i, key in enumerate(order)}
+        new_order = order.split(',\n')
+        new_order = {key: i for i, key in enumerate(new_order)}
         if column:
             dictionary = dict(self.df.loc[1:, column].dropna().value_counts(normalize=True))
             labels = list(dictionary.keys())
@@ -432,14 +444,9 @@ class DataAnalyzer:
             labels = list(self.df[label_column])
             nums = np.array(list(self.df[numbers_column])) / sum(np.array(list(self.df[numbers_column])))
             vals = np.array(self.round_to_100(np.array(nums) * 100)) / 100
-        labels, vals = zip(*sorted(zip(labels, vals), key=lambda d: order[d[0]]))
+        labels, vals = zip(*sorted(zip(labels, vals), key=lambda d: new_order[d[0]]))
         text_temp = '%{percent:1.0%}' if what_show == 'Percent' else 'label+percent'
-        if len(labels) <= 2:
-            palette = ['rgb(222,46,37)', 'rgb(170,170,170)']
-        elif len(labels) <= 5:
-            palette = self.color_palette2
-        else:
-            palette = self.color_palette
+        palette = self.get_palette(len(labels))
         if what_show == 'Percent':
             fig = go.Figure(data=[go.Pie(labels=labels, values=vals,
                                          marker_colors=palette[:len(labels)],
@@ -526,16 +533,16 @@ class DataAnalyzer:
                                     width: int = 900, height: int = 500,
                                     transparent: bool = False,
                                     font_size: int = 20, font: str = 'Hevletica Neue'):
-        order = order.split(',\n')
+        new_order = order.split(',\n')
         df_temp = pd.DataFrame(self.df.loc[1:, column].value_counts(
             normalize=True))
         df_temp[column] = self.round_to_100(np.array(df_temp[column] * 100))
-        if order:
-            not_in_df = [index for index in order if index not in set(list(
+        if new_order:
+            not_in_df = [index for index in new_order if index not in set(list(
                 df_temp.index))]
             for i in not_in_df:
                 df_temp.loc[i, :] = [np.nan] * len(df_temp.columns)
-            df_temp = df_temp.loc[order,]
+            df_temp = df_temp.loc[new_order, ]
         df_temp = df_temp.fillna(0).reset_index()
         df_temp = df_temp.sort_values(by='index', ascending=True)
         fig = go.Figure()
@@ -554,7 +561,7 @@ class DataAnalyzer:
                                     x=df_temp.loc[0, column] / 2, y=0,
                                     text=' ' + str(
                                         int(df_temp.loc[0, column])) + '%' + '<br> <span style="font-size: 25px;">' +
-                                         df_temp.loc[0, 'index'] + '</span>',
+                                            df_temp.loc[0, 'index'] + '</span>',
                                     font=dict(family=font, size=font_size,
                                               color='rgb(255, 255, 255)'),
                                     showarrow=False))
@@ -565,7 +572,8 @@ class DataAnalyzer:
                 annotations.append(dict(xref='x', yref='y',
                                         x=space + (df_temp.loc[i, column] / 2), y=0,
                                         text=' ' + str(
-                                            int(df_temp.loc[i, column])) + '%' + '<br> <span style="font-size: 25px;">' +
+                                            int(df_temp.loc[
+                                                    i, column])) + '%' + '<br> <span style="font-size: 25px;">' +
                                              df_temp.loc[i, 'index'] + '</span>',
                                         font=dict(family=font, size=font_size,
                                                   color='rgb(255, 255, 255)'),
@@ -624,14 +632,14 @@ class DataAnalyzer:
                           ):
         df = deepcopy(self.df)
         overall = sum(self.df.loc[:, column]) / len(self.df.loc[:, column])
-        order = order.split(',\n')
+        new_order = order.split(',\n')
         df = df.set_index(course_col)
-        if order:
-            not_in_df = [index for index in order if index not in set(list(
+        if new_order:
+            not_in_df = [index for index in new_order if index not in set(list(
                 df.index))]
             for i in not_in_df:
                 df.loc[i, :] = [np.nan] * len(df.columns)
-            df = df.loc[order,]
+            df = df.loc[new_order, ]
         df = df.fillna(0).reset_index()
         x = list(df[course_col]).copy()
         x_copy = x.copy()
@@ -658,7 +666,7 @@ class DataAnalyzer:
 
         if show_average:
             fig.add_trace(go.Scatter(x=x, y=[round(overall, int(round_nums))] * len(x),
-                                     marker_color=self.color_palette[-1],
+                                     marker_color=self.get_palette(len(x))[-1],
                                      name=avg_line_title))
             addition = '%' if percents else ''
             num = round(overall, int(round_nums)) * 100 if percents else round(overall, int(round_nums))
@@ -685,11 +693,7 @@ class DataAnalyzer:
         cols = list(self.df.columns)
         cols.remove(time_col)
 
-
-        if len(cols) > 5:
-            colors = self.color_palette
-        else:
-            colors = self.color_palette2
+        colors = self.get_palette(len(cols))
 
         index = 0
         for ind, col in enumerate(cols):
@@ -711,30 +715,30 @@ class DataAnalyzer:
                                      name='Average',
                                      line=dict(color=colors[index + 1], width=4, dash='dash')))
         fig.update_layout(
-                    font_family=font,
-                    font_size=font_size,
-                    title=title_text if title else '',
-                    title_font_family=font,
-                    title_font_size=font_size * 1.5,
-                    xaxis_tickfont_size=font_size,
-                    xaxis=dict(
-                        title=x_title if x_title else '',
-                        titlefont_size=font_size,
-                        tickfont_size=font_size,
-                        tickformat='%b, %d'
-                    ),
-                    yaxis=dict(
-                        title=y_title if y_title else '',
-                        titlefont_size=font_size,
-                        tickfont_size=font_size,
-                        tickformat="1",
-                        title_standoff=width * 0.02
-                    ),
-                    template=self.large_rockwell_template,
-                    legend=dict(font_size=font_size,
-                                font_family=font),
-                    width=width, height=height
-                )
+            font_family=font,
+            font_size=font_size,
+            title=title_text if title else '',
+            title_font_family=font,
+            title_font_size=font_size * 1.5,
+            xaxis_tickfont_size=font_size,
+            xaxis=dict(
+                title=x_title if x_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat='%b, %d'
+            ),
+            yaxis=dict(
+                title=y_title if y_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat="1",
+                title_standoff=width * 0.02
+            ),
+            template=self.large_rockwell_template,
+            legend=dict(font_size=font_size,
+                        font_family=font),
+            width=width, height=height
+        )
         if y_range is not None:
             fig.update_yaxes(range=y_range)
         if tick_distance is not None:
@@ -748,64 +752,6 @@ class DataAnalyzer:
 
         fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
-        fig.update_xaxes(tickangle=0, automargin=True)
-        return fig
-
-    def plot_horizontal_bar_for_nps(self,
-                                    course_col: str, column: str, title: Optional[bool] = False,
-                                    title_text: Optional[str] = None,
-                                    x_title: Optional[str] = None, y_title: Optional[str] = None,
-                                    width: int = 900, height: int = 550,
-                                    font_size: int = 20, font: str = 'Hevletica Neue', max_symb: int = 20,
-                                    transparent: bool = False, percents: bool = True,
-                                    round_nums: int = 2):
-        df = deepcopy(self.df)
-        df = df.set_index(course_col)
-        df = df.fillna(0).reset_index()
-        x = list(df[course_col]).copy()
-        x = [split_string(string, max_symb) for string in x]
-        v = self.df[column]
-        fig = go.Figure()
-        fig.add_trace(go.Bar(y=x, x=[round(i, int(round_nums)) for i in v],
-                             marker_color='rgb(224,44,36)',
-                             texttemplate='%{x}' if percents else '%{x}%',
-                             textfont_size=font_size, orientation='h',
-                             textposition='outside'
-                             ))
-        fig.update_xaxes(range=[-120, 120])
-        fig.update_layout(
-            title=title_text if title else '',
-            title_font_family=font,
-            title_font_size=font_size * 1.5,
-            font_family=font,
-            font_size=font_size,
-            xaxis=dict(
-                title=x_title if x_title else '',
-                titlefont_size=font_size,
-                tickfont_size=font_size
-            ),
-            yaxis=dict(
-                title=y_title if y_title else '',
-                titlefont_size=font_size,
-                tickfont_size=font_size,
-                tickformat='1%' if percents else '1',
-                title_standoff=25
-            ),
-            bargap=0.15,  # gap between bars of adjacent location coordinates.
-            template=self.large_rockwell_template,
-            width=width,
-            height=height,
-            barmode='relative'
-        )
-        if transparent:
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
-                              plot_bgcolor='rgba(0,0,0,0)')
-        else:
-            fig.update_layout(plot_bgcolor='rgb(255,255,255)')
-
-        fig.update_xaxes(showline=True, linewidth=1, linecolor='black')
-        fig.update_yaxes(showline=False, linewidth=1, linecolor='black')
         fig.update_yaxes(showgrid=False, gridwidth=1, gridcolor='lightgrey', automargin=True)
         fig.update_xaxes(tickangle=0, automargin=True)
         return fig
@@ -883,13 +829,13 @@ class DataAnalyzer:
         fig.add_trace(go.Bar(
             name=first_column,
             x=x, y=[round(i, 2) for i in df[first_column]],
-            marker_color=self.color_palette[-2],
+            marker_color=self.get_palette(2)[-1],
             texttemplate='%{y}', textposition='outside', textfont_size=font_size
         ))
         fig.add_trace(go.Bar(
             name=second_column,
             x=x, y=[round(i, 2) for i in df[second_column]],
-            marker_color='rgb(232,148,60)',
+            marker_color=self.get_palette(2)[0],
             texttemplate='%{y}', textposition='outside', textfont_size=font_size
         ))
         fig.update_layout(
@@ -945,27 +891,27 @@ class DataAnalyzer:
                        transparent: bool = False):
         fig = go.Figure(data=[go.Histogram(x=self.df[column], marker_color='rgb(222,46,37)')])
         fig.update_layout(
-                title=title_text if title else '',
-                title_font_family=font,
-                title_font_size=font_size * 1.5,
-                font_family=font,
-                font_size=font_size,
-                xaxis=dict(
-                    title=x_title if x_title else '',
-                    titlefont_size=font_size,
-                    tickfont_size=font_size
-                ),
-                yaxis=dict(
-                    title=y_title if y_title else '',
-                    titlefont_size=font_size,
-                    tickfont_size=font_size,
-                    tickformat='1',
-                    title_standoff=25
-                ),
-                template=self.large_rockwell_template,
-                width=width,
-                height=height
-            )
+            title=title_text if title else '',
+            title_font_family=font,
+            title_font_size=font_size * 1.5,
+            font_family=font,
+            font_size=font_size,
+            xaxis=dict(
+                title=x_title if x_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size
+            ),
+            yaxis=dict(
+                title=y_title if y_title else '',
+                titlefont_size=font_size,
+                tickfont_size=font_size,
+                tickformat='1',
+                title_standoff=25
+            ),
+            template=self.large_rockwell_template,
+            width=width,
+            height=height
+        )
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
                               plot_bgcolor='rgba(0,0,0,0)')
@@ -987,8 +933,8 @@ class DataAnalyzer:
         df = self.df
         y = np.array([float(i) for i in df[first_column]])
         x = np.array([float(i) for i in df[second_column]])
-        X = sm.add_constant(x)
-        res = sm.OLS(y, X).fit()
+        x_regr = sm.add_constant(x)
+        res = sm.OLS(y, x_regr).fit()
 
         st, data, ss2 = summary_table(res, alpha=0.05)
         preds = pd.DataFrame.from_records(data, columns=[s.replace('\n', ' ') for s in ss2])
@@ -1012,7 +958,7 @@ class DataAnalyzer:
                 'color': 'rgb(215,116,102)'
             }
         })
-        #Add a lower bound for the confidence interval, white
+        # Add a lower bound for the confidence interval, white
         p3 = go.Scatter({
             'mode': 'lines',
             'x': preds['displ'],
@@ -1024,7 +970,7 @@ class DataAnalyzer:
             }
         })
         # Upper bound for the confidence band, transparent but with fill
-        p4 = go.Scatter( {
+        p4 = go.Scatter({
             'type': 'scatter',
             'mode': 'lines',
             'x': preds['displ'],
@@ -1055,7 +1001,7 @@ class DataAnalyzer:
                 titlefont_size=font_size,
                 tickfont_size=font_size,
                 tickformat='1%',
-                title_standoff=width*0.01
+                title_standoff=width * 0.01
             ),
             template=dict(
                 layout=go.Layout(title_font=dict(family=font, size=font_size * 1.5))
