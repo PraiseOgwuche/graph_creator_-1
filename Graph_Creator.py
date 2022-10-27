@@ -217,10 +217,11 @@ if uploaded_file is not None:
 
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
+            reverse_legend_order = st.checkbox('Select to reverse legend order')
             set_y_range = st.checkbox('Select to set y-axis range', value=False)
             if set_y_range:
                 minimum = 0.
-                maximum = 100.
+                maximum = 1.
                 y_min = st.number_input('min', step=1., min_value=minimum * -5, max_value=maximum,
                                         value=minimum)
                 y_max = st.number_input('max', step=1., min_value=minimum, max_value=maximum * 5,
@@ -248,7 +249,8 @@ if uploaded_file is not None:
                                                                   multilevel_columns=multilevel_columns,
                                                                   course_col=course_column, percents=percents,
                                                                   bar_gap=bar_gap, bar_group_gap=bar_group_gap,
-                                                                  y_range=y_range, tick_distance=tick_distance)
+                                                                  y_range=y_range, tick_distance=tick_distance,
+                                                                  reverse_legend_order=reverse_legend_order)
             st.plotly_chart(graph_for_plot)
 
     elif option == 'Multiple-Choice Question Bar Graph':
@@ -597,7 +599,7 @@ if uploaded_file is not None:
         with st.sidebar:
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
-            gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
+            gp = graph_params(1500, 780, 27, True, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
                               'square - 1200x900 with 27 font')
@@ -610,7 +612,8 @@ if uploaded_file is not None:
                                                             title=gp.title, title_text=gp.title_text,
                                                             transparent=gp.transparent,
                                                             percents=percents,
-                                                            max_symb=gp.max_symbols)
+                                                            max_symb=gp.max_symbols,
+                                                            legend_position=gp.legend_position)
             st.plotly_chart(graph_for_plot)
 
     elif option == 'Scatter Graph with Regression Line':

@@ -7,6 +7,7 @@ known_orders = (
     ('Strongly disagree', 'Disagree',
      'Neutral', 'Agree',
      'Strongly agree'),
+    ('Extremely ineffectively', 'Ineffectively', 'Neutral', 'Effectively', 'Extremely effectively'),
     ('Less than 1 hour', '1-2 hours',
      '2-3 hours', '3-4 hours', 'More than 5 hours'),
     ('Extremely easy', 'Easy', 'Somewhat easy',

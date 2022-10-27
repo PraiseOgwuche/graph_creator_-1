@@ -120,7 +120,8 @@ class DataAnalyzer:
                                multilevel_columns: bool = False, course_col: Optional[str] = None,
                                bar_gap: Optional[float] = None, bar_group_gap: Optional[float] = None,
                                y_range: Optional[list] = None,
-                               tick_distance: Optional[float] = None):
+                               tick_distance: Optional[float] = None,
+                               reverse_legend_order: bool = False):
         new_order = order.split(',\n')
         palette = self.get_palette(len(new_order))
         if not multilevel_columns:
@@ -232,6 +233,8 @@ class DataAnalyzer:
             fig.update_yaxes(range=y_range)
         if tick_distance is not None:
             fig.update_yaxes(dtick=tick_distance)
+        if reverse_legend_order:
+            fig.update_layout(legend_traceorder="reversed")
         return fig
 
     def get_categories_from_columns(self, column: str, sep: str,
@@ -820,7 +823,7 @@ class DataAnalyzer:
                          width: int = 900, height: int = 550,
                          font_size: int = 20, font: str = 'Hevletica Neue',
                          transparent: bool = False, percents: bool = True,
-                         max_symb: int = 20):
+                         max_symb: int = 20, legend_position: List[str] = ('bottom', 'center')):
         fig = go.Figure()
         df = self.df
         x = list(df[column]).copy()
@@ -838,6 +841,19 @@ class DataAnalyzer:
             marker_color=self.get_palette(2)[0],
             texttemplate='%{y}', textposition='outside', textfont_size=font_size
         ))
+        if len(legend_position) == 2:
+            y_legend = 1 if legend_position[1] == 'top' else 0.5 if legend_position[1] == 'middle' else -0.3
+            x_legend = 1 if legend_position[0] == 'right' else 0.5 if legend_position[0] == 'center' else -0.15
+            orientation = 'h' if legend_position[0] == 'center' else 'v'
+            x_anchor = 'left'
+            y_anchor = 'top'
+        else:
+            y_legend = legend_position[1]
+            x_legend = legend_position[0]
+            orientation = 'v' if legend_position[4] == 'vertical' else 'h'
+            x_anchor = legend_position[2]
+            y_anchor = legend_position[3]
+
         fig.update_layout(
 
             title=title_text if title else '',
@@ -864,11 +880,11 @@ class DataAnalyzer:
             showlegend=True,
             legend=dict(font_size=font_size,
                         font_family=font,
-                        orientation='h',
-                        y=-0.35,
-                        x=0.5,
-                        xanchor='center',
-                        yanchor='middle'),
+                        orientation=orientation,
+                        y=y_legend,
+                        x=x_legend,
+                        xanchor=x_anchor,
+                        yanchor=y_anchor),
         )
         if transparent:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
