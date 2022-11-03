@@ -534,7 +534,7 @@ if uploaded_file is not None:
 
     elif option == 'Line Graph':
         with st.sidebar:
-            time_column = st.selectbox('Select pre-post-column column to create graph for:', tuple(dataframe.columns))
+            time_column = st.selectbox('Select time column to create graph for:', tuple(dataframe.columns))
             set_y_range = st.checkbox('Select to set y-axis range', value=False)
 
             if set_y_range:

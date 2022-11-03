@@ -20,7 +20,7 @@ class DataAnalyzer:
     color_2 = ["#ef4137", "#322864"]
     color_4 = ["#853565", "#f0a81b", "#5b3e97", "#ef4137"]
     color_5 = ["#a03068", "#da1c4f", "#ef4137", "#f47622", "#f0a81b"]
-    color_6 = ["#f0a81b", "a7427e", "#da1c4f", "#85b941", "#19a6b4", "#322864"]
+    color_6 = ["#f0a81b", "#a7427e", "#da1c4f", "#85b941", "#19a6b4", "#322864"]
     color_8 = ["#7d66ad", "#322864", "#ef4137", "#da1c4f", "#e4d52e", "#85b941", "#4bbfad", "#117891"]
     color_10 = ["#a7427e", "#5b3e97", "#efb91c", "#ef4137", "#da1c4f", "#e4d52e", "#85b941", "#34ab7c",
                 "#19a6b4", "#322864"]
@@ -696,7 +696,10 @@ class DataAnalyzer:
         cols = list(self.df.columns)
         cols.remove(time_col)
 
-        colors = self.get_palette(len(cols))
+        if show_average:
+            colors = self.get_palette(len(cols) + 1)
+        else:
+            colors = self.get_palette(len(cols))
 
         index = 0
         for ind, col in enumerate(cols):
@@ -704,9 +707,8 @@ class DataAnalyzer:
             fig.add_trace(go.Scatter(y=df_new[col], x=pd.to_datetime(df_new[time_col]),
                                      mode='lines+text',
                                      name=col,
-                                     line=dict(color=colors[ind + 1], width=4)))
+                                     line=dict(color=colors[ind], width=4)))
             index += 1
-
         if show_average:
             means = []
             dates = self.df[time_col]
@@ -716,7 +718,7 @@ class DataAnalyzer:
             fig.add_trace(go.Scatter(y=means, x=pd.to_datetime(self.df[time_col]),
                                      mode='lines+text',
                                      name='Average',
-                                     line=dict(color=colors[index + 1], width=4, dash='dash')))
+                                     line=dict(color=colors[index], width=4, dash='dash')))
         fig.update_layout(
             font_family=font,
             font_size=font_size,
@@ -1010,13 +1012,13 @@ class DataAnalyzer:
                 title=x_title,
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%',
+                tickformat='1',
             ),
             yaxis=dict(
                 title=y_title,
                 titlefont_size=font_size,
                 tickfont_size=font_size,
-                tickformat='1%',
+                tickformat='1',
                 title_standoff=width * 0.01
             ),
             template=dict(
