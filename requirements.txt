@@ -7,5 +7,8 @@ pandas
 kaleido
 statsmodels
 wordcloud
-spacy
+spacy==3.4.3
 asent
+textnets==0.8.5
+textblob
+vaderSentiment
