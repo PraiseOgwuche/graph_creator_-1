@@ -2,9 +2,8 @@ import streamlit as st
 from io import StringIO
 import pandas as pd
 import numpy as np
-from graphs import DataAnalyzer, order
-import SessionState
-from default_orders import check_if_order_is_known
+from backend.graphs import DataAnalyzer, order
+from backend.default_orders import check_if_order_is_known
 
 
 class GraphParams:
@@ -97,11 +96,11 @@ if uploaded_file is not None:
 
     option = st.sidebar.selectbox(
         'Choose graph type to plot',
-        ('Bar Graph for Categorical Data', 'Horizontal Bar Chart for NPS scores', 'Bar Graph for Numeric Data', 'Group Bar Graph',
+        ('Bar Graph for Categorical Data', 'Horizontal Bar Chart for NPS scores', 'Bar Graph for Numeric Data',
+         'Group Bar Graph',
          'Multiple-Choice Question Bar Graph', 'Pie Chart', 'Gauge Graph', 'Horizontal Bar Graph for single NPS score',
          'Self-Assessment Graph', 'Line Graph',
          'Stacked Bar Graph', 'Scatter Graph with Regression Line', 'Histogram'))
-    session_state = SessionState.get(name='', options='')
     graph_creator = DataAnalyzer(dataframe)
     if option == 'Bar Graph for Categorical Data':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
@@ -114,18 +113,20 @@ if uploaded_file is not None:
                     ord = sorted(unique_vals)
                 order = st.text_area('Select the order for the options:',
                                      value=',\n'.join(ord), height=150)
-                session_state.options = ',\n'.join(ord)
+                st.session_state.options = ',\n'.join(ord)
             else:
                 order = st.text_area('Select the order for the options:',
-                                     value=session_state.options, height=150)
+                                     value=st.session_state.options, height=150)
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
             bar_gap = st.checkbox('Select to set custom bar gap')
             if bar_gap:
-                bar_gap = st.number_input('Bar Gap Value', step=0.1,  min_value=0., max_value=1.,
+                bar_gap = st.number_input('Bar Gap Value', step=0.1, min_value=0., max_value=1.,
                                           value=0.7)
             else:
                 bar_gap = None
+
+            one_color = st.checkbox('Select to have graph with one color of bars', value=True)
 
             set_y_range = st.checkbox('Select to set y-axis range', value=False)
             if set_y_range:
@@ -135,12 +136,13 @@ if uploaded_file is not None:
                     df_temp = pd.DataFrame(dataframe.loc[1:, column].value_counts())
                 minimum = df_temp[column].min()
                 maximum = df_temp[column].max()
-                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+
+                y_min = st.number_input('min', step=1., min_value=minimum * -5, max_value=maximum,
                                         value=minimum)
-                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                y_max = st.number_input('max', step=1., min_value=minimum, max_value=maximum * 5,
                                         value=maximum)
 
-                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                tick_distance = st.number_input('tick distance', step=0.01, min_value=0.01, max_value=1000.,
                                                 value=(maximum - minimum) / 10)
 
                 y_range = [y_min, y_max]
@@ -155,14 +157,14 @@ if uploaded_file is not None:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.create_bar_graph(column, width=gp.width, height=gp.height,
                                                             font_size=gp.font_size, font=gp.font,
-                                                            order=order, one_color=True,
+                                                            order=order, one_color=one_color,
                                                             x_title=gp.x_title, y_title=gp.y_title,
                                                             title=gp.title, title_text=gp.title_text,
                                                             max_symb=gp.max_symbols, transparent=gp.transparent,
                                                             percents=percents, bar_gap=bar_gap,
                                                             y_range=y_range, tick_distance=tick_distance)
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+
     elif option == 'Group Bar Graph':
         if multilevel_columns:
             course_column = st.sidebar.selectbox('Select course column to create graph for:',
@@ -195,36 +197,37 @@ if uploaded_file is not None:
                         options = ord
                     order = st.text_area('Select the order for the options:',
                                          value=',\n'.join(options), height=150)
-                    session_state.options = ',\n'.join(options)
+                    st.session_state.options = ',\n'.join(options)
                 else:
                     order = st.text_area('Select the order for the options:',
-                                         value=session_state.options, height=150)
+                                         value=st.session_state.options, height=150)
             bar_gap = st.checkbox('Select to set gap between bar groups')
             if bar_gap:
-                bar_gap = st.number_input('Bar Gap Value', step=0.1,  min_value=0., max_value=1.,
+                bar_gap = st.number_input('Bar Gap Value', step=0.1, min_value=0., max_value=1.,
                                           value=0.1)
             else:
                 bar_gap = None
 
             bar_group_gap = st.checkbox('Select to gap between bars within each group')
             if bar_group_gap:
-                bar_group_gap = st.number_input('Bar Group Gap Value', step=0.1,  min_value=0., max_value=1.,
-                                          value=0.1)
+                bar_group_gap = st.number_input('Bar Group Gap Value', step=0.1, min_value=0., max_value=1.,
+                                                value=0.1)
             else:
                 bar_group_gap = None
 
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
+            reverse_legend_order = st.checkbox('Select to reverse legend order')
             set_y_range = st.checkbox('Select to set y-axis range', value=False)
             if set_y_range:
                 minimum = 0.
-                maximum = 100.
-                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                maximum = 1.
+                y_min = st.number_input('min', step=1., min_value=minimum * -5, max_value=maximum,
                                         value=minimum)
-                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                y_max = st.number_input('max', step=1., min_value=minimum, max_value=maximum * 5,
                                         value=maximum)
 
-                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                tick_distance = st.number_input('tick distance', step=0.01, min_value=0.01, max_value=1000.,
                                                 value=(maximum - minimum) / 10)
 
                 y_range = [y_min, y_max]
@@ -246,9 +249,10 @@ if uploaded_file is not None:
                                                                   multilevel_columns=multilevel_columns,
                                                                   course_col=course_column, percents=percents,
                                                                   bar_gap=bar_gap, bar_group_gap=bar_group_gap,
-                                                                  y_range=y_range, tick_distance=tick_distance)
+                                                                  y_range=y_range, tick_distance=tick_distance,
+                                                                  reverse_legend_order=reverse_legend_order)
             st.plotly_chart(graph_for_plot)
-            scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
+
     elif option == 'Multiple-Choice Question Bar Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         with st.sidebar:
@@ -261,10 +265,11 @@ if uploaded_file is not None:
                 order = st.text_area('Select the order for the options:',
                                      value=',\n'.join(ord),
                                      height=250)
-                session_state.options = ',\n'.join(ord)
+                st.session_state.options = ',\n'.join(ord)
             else:
                 order = st.text_area('Select the order for the options:',
-                                     value=session_state.options, height=250)
+                                     value=st.session_state.options, height=250)
+
             gp = graph_params(900, 600, 20, False, dataframe.loc[0, column], True)
         if column:
             st.header('Resulting Graph')
@@ -276,7 +281,6 @@ if uploaded_file is not None:
                                                                        max_symb=gp.max_symbols,
                                                                        transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
-            scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
 
     elif option == 'Pie Chart':
         with st.sidebar:
@@ -296,10 +300,10 @@ if uploaded_file is not None:
                     order = st.text_area('Select the order for the options:',
                                          value=',\n'.join(ord),
                                          height=250)
-                    session_state.options = ',\n'.join(ord)
+                    st.session_state.options = ',\n'.join(ord)
                 else:
                     order = st.text_area('Select the order for the options:',
-                                         value=session_state.options, height=250)
+                                         value=st.session_state.options, height=250)
             with st.sidebar:
                 gp = graph_params(900, 600, 25, True, dataframe.loc[0, column], False)
 
@@ -318,10 +322,10 @@ if uploaded_file is not None:
                     order = st.text_area('Select the order for the options:',
                                          value=',\n'.join(ord),
                                          height=250)
-                    session_state.options = ',\n'.join(ord)
+                    st.session_state.options = ',\n'.join(ord)
                 else:
                     order = st.text_area('Select the order for the options:',
-                                         value=session_state.options, height=250)
+                                         value=st.session_state.options, height=250)
             with st.sidebar:
                 gp = graph_params(900, 600, 25, True, dataframe.loc[0, label_column], False)
 
@@ -344,7 +348,6 @@ if uploaded_file is not None:
                                                                 what_show=what_show, legend_position=gp.legend_position,
                                                                 transparent=gp.transparent, order=order)
             st.plotly_chart(graph_for_plot)
-            scale = 5 if gp.width * 2 > 3000 else 6 if gp.width > 2300 else 7
 
     elif option == 'Gauge Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
@@ -361,14 +364,13 @@ if uploaded_file is not None:
             graph_for_plot = graph_creator.create_gauge_graph(column, width=width, height=height,
                                                               font_size=font_size, font=font, transparent=transparent)
             st.plotly_chart(graph_for_plot)
-            scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
 
     elif option == 'Horizontal Bar Graph for single NPS score':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         ord = ['Detractor', 'Passive', 'Promoter']
         order = st.sidebar.text_area('Select the order for the options:',
                                      value=',\n'.join(ord), height=150)
-        session_state.options = ',\n'.join(ord)
+        st.session_state.options = ',\n'.join(ord)
         with st.sidebar:
             with st.expander("Graph Parameters"):
                 width = st.number_input('Width', min_value=500, max_value=3000, value=900)
@@ -383,7 +385,6 @@ if uploaded_file is not None:
                                                                        font_size=font_size, font=font,
                                                                        transparent=transparent, order=order)
             st.plotly_chart(graph_for_plot)
-            scale = 5 if width * 2 > 3000 else 6 if width > 2300 else 7
 
     elif option == 'Bar Graph for Numeric Data':
         with st.sidebar:
@@ -398,10 +399,10 @@ if uploaded_file is not None:
                     ord = sorted(unique_vals)
                 order = st.text_area('Select the order for the options:',
                                      value=',\n'.join(ord), height=150)
-                session_state.options = ',\n'.join(ord)
+                st.session_state.options = ',\n'.join(ord)
             else:
                 order = st.text_area('Select the order for the options:',
-                                     value=session_state.options, height=150)
+                                     value=st.session_state.options, height=150)
             show_average = st.checkbox('Show average line on the graph')
             if show_average:
                 average_line_x = st.selectbox('Select bar to locate the average line label', order.split(",\n"),
@@ -419,13 +420,13 @@ if uploaded_file is not None:
             if set_y_range:
                 minimum = min(dataframe[data_column])
                 maximum = max(dataframe[data_column])
-                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                y_min = st.number_input('min', step=1., min_value=minimum * -5, max_value=maximum,
                                         value=minimum)
-                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                y_max = st.number_input('max', step=1., min_value=minimum, max_value=maximum * 5,
                                         value=maximum)
 
-                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
-                                                value=(maximum - minimum) / 10)
+                tick_distance = st.number_input('tick distance', step=0.01, min_value=0.01, max_value=1000.,
+                                                value=(maximum - minimum) / 3)
 
                 y_range = [y_min, y_max]
             else:
@@ -434,8 +435,8 @@ if uploaded_file is not None:
 
             bar_gap = st.checkbox('Select to set custom bar gap')
             if bar_gap:
-                bar_gap = st.number_input('Bar Gap Value', step=0.1,  min_value=0., max_value=1.,
-                                        value=0.7)
+                bar_gap = st.number_input('Bar Gap Value', step=0.1, min_value=0., max_value=1.,
+                                          value=0.7)
             else:
                 bar_gap = None
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
@@ -461,7 +462,7 @@ if uploaded_file is not None:
                                                              bar_gap=bar_gap
                                                              )
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+
     elif option == 'Horizontal Bar Chart for multiple NPS scores':
         with st.sidebar:
             column = st.selectbox('Select label column to create graph for:', tuple(dataframe.columns))
@@ -485,7 +486,6 @@ if uploaded_file is not None:
                                                                        percents=percents,
                                                                        round_nums=round_nums)
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
     elif option == 'Self-Assessment Graph':
         with st.sidebar:
@@ -495,11 +495,11 @@ if uploaded_file is not None:
             if set_y_range:
                 minimum = np.nanmin(dataframe.drop(time_column, axis=1).values)
                 maximum = np.nanmax(dataframe.drop(time_column, axis=1).values)
-                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                y_min = st.number_input('min', step=1., min_value=minimum * -5, max_value=maximum,
                                         value=minimum)
-                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                y_max = st.number_input('max', step=1., min_value=minimum, max_value=maximum * 5,
                                         value=maximum)
-                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                tick_distance = st.number_input('tick distance', step=0.01, min_value=0.01, max_value=1000.,
                                                 value=(maximum - minimum) / 10)
 
                 y_range = [y_min, y_max]
@@ -508,7 +508,7 @@ if uploaded_file is not None:
                 tick_distance = None
             bar_gap = st.checkbox('Select to set custom bar gap')
             if bar_gap:
-                bar_gap = st.number_input('Bar Gap Value', step=0.1,  min_value=0., max_value=1.,
+                bar_gap = st.number_input('Bar Gap Value', step=0.1, min_value=0., max_value=1.,
                                           value=0.7)
             else:
                 bar_gap = None
@@ -531,23 +531,21 @@ if uploaded_file is not None:
                                                                 y_range=y_range, tick_distance=tick_distance,
                                                                 bar_gap=bar_gap)
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
     elif option == 'Line Graph':
         with st.sidebar:
-            time_column = st.selectbox('Select pre-post-column column to create graph for:', tuple(dataframe.columns))
+            time_column = st.selectbox('Select time column to create graph for:', tuple(dataframe.columns))
             set_y_range = st.checkbox('Select to set y-axis range', value=False)
 
             if set_y_range:
                 minimum = np.nanmin(dataframe.drop(time_column, axis=1).values)
                 maximum = np.nanmax(dataframe.drop(time_column, axis=1).values)
-                y_min = st.number_input('min', step=1.,  min_value=minimum * -5, max_value=maximum,
+                y_min = st.number_input('min', step=1., min_value=minimum * -5, max_value=maximum,
                                         value=minimum)
-                y_max = st.number_input('max', step=1.,  min_value=minimum, max_value=maximum * 5,
+                y_max = st.number_input('max', step=1., min_value=minimum, max_value=maximum * 5,
                                         value=maximum)
-                tick_distance = st.number_input('tick distance', step=0.01,  min_value=0.01, max_value=1000.,
+                tick_distance = st.number_input('tick distance', step=0.01, min_value=0.01, max_value=1000.,
                                                 value=(maximum - minimum) / 10)
-
 
                 y_range = [y_min, y_max]
             else:
@@ -568,7 +566,6 @@ if uploaded_file is not None:
                                                      transparent=gp.transparent, y_range=y_range,
                                                      tick_distance=tick_distance, show_average=show_average)
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
     elif option == 'Horizontal Bar Chart for NPS scores':
         with st.sidebar:
@@ -576,11 +573,11 @@ if uploaded_file is not None:
             data_column = st.selectbox('Select data column to create graph for:', tuple(dataframe.columns))
             round_nums = st.number_input('Rounding of Inputs', min_value=1, max_value=10, step=1, value=2)
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
-                                       value=True)
+                                   value=True)
             gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
-                                  'The default options for this graph is: \n'
-                                  'rectangular - 1550x820 with 29 font, \n'
-                                  'square - 1200x900 with 27 font')
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font')
         if column:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.plot_horizontal_bar_for_nps(course_col=column, column=data_column,
@@ -593,7 +590,7 @@ if uploaded_file is not None:
                                                                        percents=percents,
                                                                        round_nums=round_nums)
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+
     elif option == 'Stacked Bar Graph':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         first_column = st.sidebar.selectbox('Select value 1 column :', tuple(dataframe.columns))
@@ -602,7 +599,7 @@ if uploaded_file is not None:
         with st.sidebar:
             percents = st.checkbox('Show percents on graph (if not checked, absolute values will be shown)',
                                    value=True)
-            gp = graph_params(1500, 780, 27, False, dataframe.loc[0, column], True,
+            gp = graph_params(1500, 780, 27, True, dataframe.loc[0, column], True,
                               'The default options for this graph is: \n'
                               'rectangular - 1550x820 with 29 font, \n'
                               'square - 1200x900 with 27 font')
@@ -615,9 +612,9 @@ if uploaded_file is not None:
                                                             title=gp.title, title_text=gp.title_text,
                                                             transparent=gp.transparent,
                                                             percents=percents,
-                                                            max_symb=gp.max_symbols)
+                                                            max_symb=gp.max_symbols,
+                                                            legend_position=gp.legend_position)
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
 
     elif option == 'Scatter Graph with Regression Line':
         first_column = st.sidebar.selectbox('Select value 1 column :', tuple(dataframe.columns))
@@ -641,20 +638,19 @@ if uploaded_file is not None:
                                                                         marker_size=marker_size,
                                                                         marker_line_width=marker_border_width)
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
+
     elif option == 'Histogram':
         column = st.sidebar.selectbox('Select column to create graph for:', tuple(dataframe.columns))
         with st.sidebar:
             gp = graph_params(1200, 600, 27, False, dataframe.loc[0, column], False,
-                                  'The default options for this graph is: \n'
-                                  'rectangular - 1550x820 with 29 font, \n'
-                                  'square - 1200x900 with 27 font')
+                              'The default options for this graph is: \n'
+                              'rectangular - 1550x820 with 29 font, \n'
+                              'square - 1200x900 with 27 font')
         if column:
             st.header('Resulting Graph')
             graph_for_plot = graph_creator.plot_histogram(column, width=gp.width, height=gp.height,
-                                                                font_size=gp.font_size, font=gp.font,
-                                                                x_title=gp.x_title, y_title=gp.y_title,
-                                                                title=gp.title, title_text=gp.title_text,
-                                                                transparent=gp.transparent)
+                                                          font_size=gp.font_size, font=gp.font,
+                                                          x_title=gp.x_title, y_title=gp.y_title,
+                                                          title=gp.title, title_text=gp.title_text,
+                                                          transparent=gp.transparent)
             st.plotly_chart(graph_for_plot)
-            scale = 4 if gp.width * 2 > 3000 else 5 if gp.width > 2300 else 6
